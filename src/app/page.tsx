@@ -84,11 +84,11 @@ export default function Home() {
 
         <div className="max-w-7xl mx-auto text-center relative z-10">
 
-          <h1 className="text-4xl md:text-6xl font-black mb-4 tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60">
+          <h1 className="text-4xl md:text-6xl font-black mb-4 tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/60">
             General Championship <br />
             <span className="text-primary">2025-2026</span>
           </h1>
-          <p className="text-lg md:text-xl text-slate-400 mb-8 max-w-2xl mx-auto font-light">
+          <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto font-light">
             IIT Dharwad's Premier Inter-Hostel Sports Tournament
           </p>
         </div>
@@ -101,28 +101,28 @@ export default function Home() {
             <Link
               key={link.href}
               href={link.href}
-              className="group relative overflow-hidden bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 text-center hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/10"
+              className="group relative overflow-hidden bg-card/50 backdrop-blur-sm border border-border rounded-2xl p-6 text-center hover:bg-accent/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/10"
             >
               <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4 bg-gradient-to-br from-primary/80 to-primary shadow-lg group-hover:scale-110 transition-transform duration-300">
-                <link.icon className="h-6 w-6 text-black" />
+                <link.icon className="h-6 w-6 text-primary-foreground" />
               </div>
-              <span className="font-bold text-base text-slate-200 group-hover:text-white transition-colors">{link.label}</span>
+              <span className="font-bold text-base text-card-foreground group-hover:text-primary transition-colors">{link.label}</span>
             </Link>
           ))}
         </div>
 
         {/* Men's Standings Table */}
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl overflow-hidden shadow-2xl mb-8">
-          <div className="px-6 py-4 border-b border-white/10 bg-white/5 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-white flex items-center">
-              <Trophy className="h-5 w-5 text-primary mr-2" />
+        <div className="bg-card/50 backdrop-blur-md border border-border rounded-3xl overflow-hidden shadow-2xl mb-8">
+          <div className="px-6 py-4 border-b border-border bg-card/50 flex items-center justify-between">
+            <h2 className="text-3xl font-bold text-foreground flex items-center">
+              <Trophy className="h-8 w-8 text-primary mr-2" />
               Men's GC Standings
             </h2>
-            <div className="text-xs text-slate-400">Live Updates</div>
+            <div className="text-xs text-muted-foreground">Live Updates</div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left">
-              <thead className="text-[10px] text-slate-400 uppercase bg-white/5">
+              <thead className="text-xs text-muted-foreground uppercase bg-card/50">
                 <tr>
                   <th className="px-6 py-3 font-semibold tracking-wider">Rank</th>
                   <th className="px-6 py-3 font-semibold tracking-wider">Team</th>
@@ -132,20 +132,20 @@ export default function Home() {
                   <th className="px-6 py-3 text-right font-semibold tracking-wider">Points</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5 text-sm">
+              <tbody className="divide-y divide-border text-base">
                 {standings.men.map((team, index) => (
-                  <tr key={team.name} className="hover:bg-white/5 transition-colors group">
-                    <td className="px-6 py-4 font-bold text-white">
-                      {index === 0 ? <span className="text-xl">🏆</span> :
-                        index === 1 ? <span className="text-lg text-slate-300">🥈</span> :
-                          index === 2 ? <span className="text-lg text-amber-700">🥉</span> :
-                            <span className="text-slate-500">#{index + 1}</span>}
+                  <tr key={team.name} className="hover:bg-accent/5 transition-colors group">
+                    <td className="px-6 py-4 font-bold text-foreground">
+                      {index === 0 ? <span className="text-2xl text-chart-5">🏆</span> :
+                        index === 1 ? <span className="text-xl text-muted-foreground">🥈</span> :
+                          index === 2 ? <span className="text-xl text-amber-700">🥉</span> :
+                            <span className="text-muted-foreground">#{index + 1}</span>}
                     </td>
-                    <td className="px-6 py-4 font-bold text-white group-hover:text-primary transition-colors">{team.name}</td>
-                    <td className="px-6 py-4 text-center text-slate-300 font-medium">{team.gold}</td>
-                    <td className="px-6 py-4 text-center text-slate-300 font-medium">{team.silver}</td>
-                    <td className="px-6 py-4 text-center text-slate-300 font-medium">{team.bronze}</td>
-                    <td className="px-6 py-4 text-right font-black text-lg text-primary">{team.points}</td>
+                    <td className="px-6 py-4 font-bold text-lg text-foreground group-hover:text-primary transition-colors">{team.name}</td>
+                    <td className="px-6 py-4 text-center text-muted-foreground font-bold">{team.gold}</td>
+                    <td className="px-6 py-4 text-center text-muted-foreground font-bold">{team.silver}</td>
+                    <td className="px-6 py-4 text-center text-muted-foreground font-bold">{team.bronze}</td>
+                    <td className="px-6 py-4 text-right font-black text-2xl text-primary">{team.points}</td>
                   </tr>
                 ))}
               </tbody>
@@ -154,17 +154,17 @@ export default function Home() {
         </div>
 
         {/* Women's Standings Table */}
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
-          <div className="px-6 py-4 border-b border-white/10 bg-white/5 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-white flex items-center">
-              <Trophy className="h-5 w-5 text-pink-500 mr-2" />
+        <div className="bg-card/50 backdrop-blur-md border border-border rounded-3xl overflow-hidden shadow-2xl">
+          <div className="px-6 py-4 border-b border-border bg-card/50 flex items-center justify-between">
+            <h2 className="text-3xl font-bold text-foreground flex items-center">
+              <Trophy className="h-8 w-8 text-chart-5 mr-2" />
               Women's GC Standings
             </h2>
-            <div className="text-xs text-slate-400">Live Updates</div>
+            <div className="text-xs text-muted-foreground">Live Updates</div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left">
-              <thead className="text-[10px] text-slate-400 uppercase bg-white/5">
+              <thead className="text-xs text-muted-foreground uppercase bg-card/50">
                 <tr>
                   <th className="px-6 py-3 font-semibold tracking-wider">Rank</th>
                   <th className="px-6 py-3 font-semibold tracking-wider">Team</th>
@@ -174,20 +174,20 @@ export default function Home() {
                   <th className="px-6 py-3 text-right font-semibold tracking-wider">Points</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5 text-sm">
+              <tbody className="divide-y divide-border text-base">
                 {standings.women.map((team, index) => (
-                  <tr key={team.name} className="hover:bg-white/5 transition-colors group">
-                    <td className="px-6 py-4 font-bold text-white">
-                      {index === 0 ? <span className="text-xl">🏆</span> :
-                        index === 1 ? <span className="text-lg text-slate-300">🥈</span> :
-                          index === 2 ? <span className="text-lg text-amber-700">🥉</span> :
-                            <span className="text-slate-500">#{index + 1}</span>}
+                  <tr key={team.name} className="hover:bg-accent/5 transition-colors group">
+                    <td className="px-6 py-4 font-bold text-foreground">
+                      {index === 0 ? <span className="text-2xl text-chart-5">🏆</span> :
+                        index === 1 ? <span className="text-xl text-muted-foreground">🥈</span> :
+                          index === 2 ? <span className="text-xl text-amber-700">🥉</span> :
+                            <span className="text-muted-foreground">#{index + 1}</span>}
                     </td>
-                    <td className="px-6 py-4 font-bold text-white group-hover:text-primary transition-colors">{team.name}</td>
-                    <td className="px-6 py-4 text-center text-slate-300 font-medium">{team.gold}</td>
-                    <td className="px-6 py-4 text-center text-slate-300 font-medium">{team.silver}</td>
-                    <td className="px-6 py-4 text-center text-slate-300 font-medium">{team.bronze}</td>
-                    <td className="px-6 py-4 text-right font-black text-lg text-primary">{team.points}</td>
+                    <td className="px-6 py-4 font-bold text-lg text-foreground group-hover:text-primary transition-colors">{team.name}</td>
+                    <td className="px-6 py-4 text-center text-muted-foreground font-bold">{team.gold}</td>
+                    <td className="px-6 py-4 text-center text-muted-foreground font-bold">{team.silver}</td>
+                    <td className="px-6 py-4 text-center text-muted-foreground font-bold">{team.bronze}</td>
+                    <td className="px-6 py-4 text-right font-black text-2xl text-primary">{team.points}</td>
                   </tr>
                 ))}
               </tbody>
@@ -197,9 +197,9 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-white/10 bg-black/50 py-12 mt-20">
+      <footer className="border-t border-border bg-muted/50 py-12 mt-20">
         <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="text-slate-500">© 2025-26 IIT Dharwad Sports Council</p>
+          <p className="text-muted-foreground">© 2025-26 IIT Dharwad Sports Council</p>
         </div>
       </footer>
     </div>

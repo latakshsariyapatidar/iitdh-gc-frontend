@@ -208,8 +208,8 @@ export default function ResultsPage() {
 
                     {/* Standings */}
                     <div>
-                        <h2 className="text-xl font-bold text-white mb-4 flex items-center">
-                            <Medal className="h-5 w-5 text-primary mr-2" />
+                        <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
+                            <Medal className="h-6 w-6 text-primary mr-2" />
                             GC Standings
                         </h2>
                         <div className="space-y-6">

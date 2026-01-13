@@ -42,7 +42,7 @@ export default function Navbar() {
 
     return (
         <>
-            <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-black/30 border-b border-white/10">
+            <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-background/60 border-b border-border">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-20">
                         <div className="flex items-center">
@@ -50,7 +50,7 @@ export default function Navbar() {
                                 <div className="relative w-10 h-10 transition-transform group-hover:scale-110 duration-300">
                                     <Image src="/logo.png" alt="GC Logo" fill className="object-contain" />
                                 </div>
-                                <span className="font-bold text-xl tracking-tight text-white group-hover:text-primary transition-colors">
+                                <span className="font-bold text-xl tracking-tight text-foreground group-hover:text-primary transition-colors">
                                     IIT Dh Sports GC
                                 </span>
                             </Link>
@@ -64,13 +64,13 @@ export default function Navbar() {
                                         key={link.href}
                                         href={link.href}
                                         className={`relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${link.isLive
-                                            ? 'text-white bg-red-600/20 border border-red-500/50 hover:bg-red-600/40 animate-pulse-slow'
-                                            : 'text-slate-300 hover:text-white hover:bg-white/5'
+                                            ? 'text-primary-foreground bg-primary/80 border border-primary hover:bg-primary animate-pulse-slow'
+                                            : 'text-muted-foreground hover:text-primary hover:bg-primary/10'
                                             }`}
                                     >
                                         {link.label}
                                         {link.isLive && (
-                                            <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-ping" />
+                                            <span className="absolute -top-1 -right-1 w-2 h-2 bg-accent rounded-full animate-ping" />
                                         )}
                                     </Link>
                                 ))}
@@ -81,7 +81,7 @@ export default function Navbar() {
                         <div className="md:hidden">
                             <button
                                 onClick={() => setIsOpen(!isOpen)}
-                                className="p-2 rounded-md text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+                                className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-colors"
                             >
                                 {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
                             </button>
@@ -90,7 +90,7 @@ export default function Navbar() {
 
                     {/* Mobile Navigation */}
                     {isOpen && (
-                        <div className="md:hidden pb-4 bg-black/90 backdrop-blur-xl border-t border-white/10 absolute left-0 right-0 px-4 shadow-2xl">
+                        <div className="md:hidden pb-4 bg-background/95 backdrop-blur-xl border-t border-border absolute left-0 right-0 px-4 shadow-2xl">
                             <div className="flex flex-col space-y-2 pt-4">
                                 {filteredLinks.map((link: any) => (
                                     <Link
@@ -98,8 +98,8 @@ export default function Navbar() {
                                         href={link.href}
                                         onClick={() => setIsOpen(false)}
                                         className={`px-4 py-3 rounded-lg text-base font-medium transition-colors ${link.isLive
-                                            ? 'text-red-400 bg-red-900/20 border border-red-900/50'
-                                            : 'text-slate-300 hover:text-white hover:bg-white/5'
+                                            ? 'text-primary bg-primary/20 border border-primary/50'
+                                            : 'text-muted-foreground hover:text-foreground hover:bg-accent/10'
                                             }`}
                                     >
                                         {link.label}
