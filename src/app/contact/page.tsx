@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Navbar from '@/components/Navbar';
-import { Mail, Phone, MapPin, Instagram, Twitter, Youtube } from 'lucide-react';
+import Navbar from '@/components/layout/Navbar';
+import { Mail, Phone, MapPin, Instagram, Youtube } from 'lucide-react';
 import { io } from 'socket.io-client';
 
 export default function ContactPage() {
@@ -97,9 +97,6 @@ export default function ContactPage() {
                                 <div className="flex space-x-4">
                                     <a href="#" className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center hover:bg-pink-600 hover:text-white text-slate-400 transition-all border border-white/10">
                                         <Instagram className="h-6 w-6" />
-                                    </a>
-                                    <a href="#" className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center hover:bg-blue-500 hover:text-white text-slate-400 transition-all border border-white/10">
-                                        <Twitter className="h-6 w-6" />
                                     </a>
                                     <a href="#" className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center hover:bg-red-600 hover:text-white text-slate-400 transition-all border border-white/10">
                                         <Youtube className="h-6 w-6" />

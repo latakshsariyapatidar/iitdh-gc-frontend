@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Navbar from '@/components/Navbar';
-import CustomSelect from '@/components/CustomSelect';
+import Navbar from '@/components/layout/Navbar';
+import CustomSelect from '@/components/ui/CustomSelect';
 import { Save, Plus, Trash } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 

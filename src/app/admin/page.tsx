@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Navbar from '@/components/Navbar';
+import Navbar from '@/components/layout/Navbar';
 import { Users, Calendar, Medal, Image, Mail, LogOut, Play, Trophy } from 'lucide-react';
 
 export default function AdminDashboard() {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Navbar from '@/components/Navbar';
+import Navbar from '@/components/layout/Navbar';
 import { Save, Plus, Trash, Upload, Link as LinkIcon, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -170,14 +170,6 @@ export default function ManageContact() {
                                     <input
                                         value={contact.socialMedia.instagram}
                                         onChange={(e) => updateSocial('instagram', e.target.value)}
-                                        className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:border-primary focus:outline-none transition-colors"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-2 block">Twitter</label>
-                                    <input
-                                        value={contact.socialMedia.twitter}
-                                        onChange={(e) => updateSocial('twitter', e.target.value)}
                                         className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:border-primary focus:outline-none transition-colors"
                                     />
                                 </div>

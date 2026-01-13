@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Navbar from '@/components/Navbar';
+import Navbar from '@/components/layout/Navbar';
 import { Users, Crown } from 'lucide-react';
-import CustomSelect from '@/components/CustomSelect';
+import CustomSelect from '@/components/ui/CustomSelect';
 import { io } from 'socket.io-client';
 
 export default function TeamsPage() {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Navbar from '@/components/Navbar';
+import Navbar from '@/components/layout/Navbar';
 import { Image as ImageIcon, X, ZoomIn, Loader2 } from 'lucide-react';
 import { io } from 'socket.io-client';
 

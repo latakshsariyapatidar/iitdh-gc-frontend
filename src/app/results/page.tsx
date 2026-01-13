@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Navbar from '@/components/Navbar';
+import Navbar from '@/components/layout/Navbar';
 import { Medal, Trophy } from 'lucide-react';
-import CustomSelect from '@/components/CustomSelect';
+import CustomSelect from '@/components/ui/CustomSelect';
 
 export default function ResultsPage() {
     const [results, setResults] = useState<any[]>([]);
@@ -13,10 +13,22 @@ export default function ResultsPage() {
     const [selectedSport, setSelectedSport] = useState<string | null>(null);
 
     useEffect(() => {
+        console.log('ResultsPage: Component mounted');
+        console.log('ResultsPage: Fetching data from', process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000');
+
         Promise.all([
-            fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/results`, { cache: 'no-store' }).then(res => res.json()),
-            fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/standings`, { cache: 'no-store' }).then(res => res.json())
+            fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/results`, { cache: 'no-store' }).then(res => {
+                console.log('ResultsPage: Results fetch response status:', res.status);
+                if (!res.ok) throw new Error(`Failed to fetch results: ${res.status}`);
+                return res.json();
+            }),
+            fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/standings`, { cache: 'no-store' }).then(res => {
+                console.log('ResultsPage: Standings fetch response status:', res.status);
+                if (!res.ok) throw new Error(`Failed to fetch standings: ${res.status}`);
+                return res.json();
+            })
         ]).then(([resultsData, standingsData]) => {
+            console.log('ResultsPage: Data fetched successfully', { resultsCount: resultsData.length, standingsCount: standingsData.length });
             setResults(resultsData);
 
             // Auto-select first sport if none selected
@@ -30,7 +42,7 @@ export default function ResultsPage() {
             setStandings(calculateStandings(standingsData));
             setLoading(false);
         }).catch((err) => {
-            console.error('Error fetching data:', err);
+            console.error('ResultsPage: Error fetching data:', err);
             setLoading(false);
         });
     }, []);

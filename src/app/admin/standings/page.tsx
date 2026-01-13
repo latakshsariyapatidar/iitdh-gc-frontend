@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Navbar from '@/components/Navbar';
+import Navbar from '@/components/layout/Navbar';
 import { Save, Plus, Trash, Trophy, ChevronDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import * as Select from '@radix-ui/react-select';

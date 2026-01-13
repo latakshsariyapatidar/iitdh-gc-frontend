@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import Navbar from '@/components/Navbar';
+import Navbar from '@/components/layout/Navbar';
 import { Trophy, Calendar, Medal, Image as ImageIcon, Users } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
