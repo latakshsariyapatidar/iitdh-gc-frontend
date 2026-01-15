@@ -12,16 +12,38 @@ const QUICK_LINKS = [
   { href: '/gallery', label: 'Gallery', icon: ImageIcon },
 ];
 
+import { io } from 'socket.io-client';
+
 export default function Home() {
   const [standings, setStandings] = useState<{ men: any[], women: any[] }>({ men: [], women: [] });
 
-  useEffect(() => {
+  const fetchStandings = () => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/standings`, { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
         const calculated = calculateStandings(data);
         setStandings(calculated);
       });
+  };
+
+  useEffect(() => {
+    fetchStandings();
+
+    const socket = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000');
+
+    socket.on('connect', () => {
+      console.log('Connected to socket server');
+    });
+
+    socket.on('dataUpdate', (data: { type: string }) => {
+      if (data.type === 'standings') {
+        fetchStandings();
+      }
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   const calculateStandings = (events: any[]) => {

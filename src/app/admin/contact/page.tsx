@@ -18,7 +18,17 @@ export default function ManageContact() {
         fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/contact`)
             .then((res) => res.json())
             .then((data) => {
-                setContact(data);
+                // Ensure proper default structure
+                const defaultContact = {
+                    email: '',
+                    phone: '',
+                    address: '',
+                    socialMedia: { instagram: '', youtube: '' },
+                    coordinators: [],
+                    ...data,
+                    socialMedia: { instagram: '', youtube: '', ...(data?.socialMedia || {}) }
+                };
+                setContact(defaultContact);
                 setLoading(false);
             });
     }, [router]);
