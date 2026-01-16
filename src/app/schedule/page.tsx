@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Navbar from '@/components/layout/Navbar';
+import Loader from '@/components/ui/Loader';
 import { Calendar, MapPin, Clock } from 'lucide-react';
 import CustomSelect from '@/components/ui/CustomSelect';
 import { io } from 'socket.io-client';
@@ -79,7 +80,7 @@ export default function SchedulePage() {
                 </div>
 
                 {loading ? (
-                    <div className="text-center text-slate-400 py-12">Loading schedule...</div>
+                    <Loader />
                 ) : (
                     <div className="max-w-4xl mx-auto">
                         {/* Sport Selector */}

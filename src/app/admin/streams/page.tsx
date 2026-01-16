@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/layout/Navbar';
+import Loader from '@/components/ui/Loader';
 import { Save, Play, Link as LinkIcon, AlertCircle, CheckCircle } from 'lucide-react';
 import CustomSelect from '@/components/ui/CustomSelect';
 import { useRouter } from 'next/navigation';
@@ -35,6 +36,7 @@ const SPORTS = [
 export default function ManageStreams() {
     const [results, setResults] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
     const [selectedSport, setSelectedSport] = useState(SPORTS[0]);
     const router = useRouter();
 
@@ -78,12 +80,20 @@ export default function ManageStreams() {
     }, [router]);
 
     const handleSave = async () => {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/schedule`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(results),
-        });
-        alert('Streams saved successfully!');
+        setSaving(true);
+        try {
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/schedule`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(results),
+            });
+            alert('Streams saved successfully!');
+        } catch (error) {
+            console.error('Error saving streams:', error);
+            alert('Failed to save streams.');
+        } finally {
+            setSaving(false);
+        }
     };
 
     const updateLiveLink = (id: string, field: string, value: string) => {
@@ -96,7 +106,7 @@ export default function ManageStreams() {
         setResults(newResults);
     };
 
-    if (loading) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
+    if (loading) return <Loader />;
 
     const filteredResults = results.filter(match => match.sport === selectedSport);
 
@@ -111,10 +121,20 @@ export default function ManageStreams() {
                     </div>
                     <button
                         onClick={handleSave}
-                        className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-6 py-3 rounded-xl flex items-center transition-all shadow-lg shadow-primary/20"
+                        disabled={saving}
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-6 py-3 rounded-xl flex items-center transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        <Save className="h-5 w-5 mr-2" />
-                        Save Changes
+                        {saving ? (
+                            <>
+                                <div className="h-5 w-5 mr-2 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                                Saving...
+                            </>
+                        ) : (
+                            <>
+                                <Save className="h-5 w-5 mr-2" />
+                                Save Changes
+                            </>
+                        )}
                     </button>
                 </div>
 

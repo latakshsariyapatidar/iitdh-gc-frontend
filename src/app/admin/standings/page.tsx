@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/layout/Navbar';
+import Loader from '@/components/ui/Loader';
 import { Save, Plus, Trash, Trophy, ChevronDown, RotateCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import * as Select from '@radix-ui/react-select';
@@ -29,6 +30,7 @@ interface Team {
 export default function ManageStandings() {
     const [standings, setStandings] = useState<Standing[]>([]);
     const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
     const [teams, setTeams] = useState<Team[]>([]);
     const [selectedSport, setSelectedSport] = useState<string>("");
     const [selectedCategory, setSelectedCategory] = useState<string>("");
@@ -69,6 +71,7 @@ export default function ManageStandings() {
             }
         }
 
+        setSaving(true);
         try {
             await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/standings`, {
                 method: 'POST',
@@ -79,6 +82,8 @@ export default function ManageStandings() {
         } catch (error) {
             console.error('Error saving standings:', error);
             alert('Failed to save standings.');
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -139,7 +144,7 @@ export default function ManageStandings() {
         }
     };
 
-    if (loading) return <div className="p-8 text-center text-slate-400">Loading...</div>;
+    if (loading) return <Loader />;
 
     // Get unique sports
     const uniqueSports = [...new Set(standings.map(e => e.sport))].filter(Boolean) as string[];
@@ -181,10 +186,20 @@ export default function ManageStandings() {
                         </button>
                         <button
                             onClick={handleSave}
-                            className="bg-primary hover:bg-primary/90 text-black font-bold px-6 py-3 rounded-xl flex items-center transition-all shadow-lg shadow-primary/20"
+                            disabled={saving}
+                            className="bg-primary hover:bg-primary/90 text-black font-bold px-6 py-3 rounded-xl flex items-center transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <Save className="h-5 w-5 mr-2" />
-                            Save Changes
+                            {saving ? (
+                                <>
+                                    <div className="h-5 w-5 mr-2 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                                    Saving...
+                                </>
+                            ) : (
+                                <>
+                                    <Save className="h-5 w-5 mr-2" />
+                                    Save Changes
+                                </>
+                            )}
                         </button>
                     </div>
                 </div>

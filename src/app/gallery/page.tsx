@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/layout/Navbar';
+import Loader from '@/components/ui/Loader';
 import { Image as ImageIcon, X, ZoomIn, Loader2 } from 'lucide-react';
 import { io } from 'socket.io-client';
 
@@ -63,15 +64,7 @@ export default function GalleryPage() {
                 </div>
 
                 {loading ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {[1, 2, 3, 4, 5, 6].map((i) => (
-                            <div key={i} className="bg-white/5 rounded-2xl border border-white/10 overflow-hidden h-64 animate-pulse">
-                                <div className="h-full w-full bg-white/5 flex items-center justify-center">
-                                    <Loader2 className="h-8 w-8 text-white/20 animate-spin" />
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                    <Loader />
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                         {gallery.map((item) => (

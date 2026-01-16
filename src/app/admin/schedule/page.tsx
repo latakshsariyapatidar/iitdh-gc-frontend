@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/layout/Navbar';
+import Loader from '@/components/ui/Loader';
 import CustomSelect from '@/components/ui/CustomSelect';
 import { Save, Plus, Trash, Calendar, Clock, MapPin } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -43,6 +44,7 @@ export default function ManageSchedule() {
     const [schedule, setSchedule] = useState<Match[]>([]);
     const [teams, setTeams] = useState<Team[]>([]);
     const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
     const [selectedMatchId, setSelectedMatchId] = useState<string>("");
     const [filterSport, setFilterSport] = useState<string>("All");
     const router = useRouter();
@@ -92,12 +94,20 @@ export default function ManageSchedule() {
             }
         }
 
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/schedule`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(schedule),
-        });
-        alert('Schedule saved successfully!');
+        setSaving(true);
+        try {
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/schedule`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(schedule),
+            });
+            alert('Schedule saved successfully!');
+        } catch (error) {
+            console.error('Error saving schedule:', error);
+            alert('Failed to save schedule.');
+        } finally {
+            setSaving(false);
+        }
     };
 
     const addMatch = () => {
@@ -136,7 +146,7 @@ export default function ManageSchedule() {
         }
     };
 
-    if (loading) return <div className="min-h-screen bg-background flex items-center justify-center text-slate-400">Loading...</div>;
+    if (loading) return <Loader />;
 
     const selectedMatchIndex = schedule.findIndex(m => m.id === selectedMatchId);
     const selectedMatch = schedule[selectedMatchIndex];
@@ -159,9 +169,18 @@ export default function ManageSchedule() {
                         </button>
                         <button
                             onClick={handleSave}
-                            className="bg-primary hover:bg-primary/90 text-black font-bold px-6 py-3 rounded-xl flex items-center transition-all shadow-lg shadow-primary/20"
+                            disabled={saving}
+                            className="bg-primary hover:bg-primary/90 text-black font-bold px-6 py-3 rounded-xl flex items-center transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <Save className="h-5 w-5 mr-2" /> Save Changes
+                            {saving ? (
+                                <>
+                                    <div className="h-5 w-5 mr-2 border-2 border-black border-t-transparent rounded-full animate-spin" /> Saving...
+                                </>
+                            ) : (
+                                <>
+                                    <Save className="h-5 w-5 mr-2" /> Save Changes
+                                </>
+                            )}
                         </button>
                     </div>
                 </div>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/layout/Navbar';
+import Loader from '@/components/ui/Loader';
 import { Save, Plus, Trash, Upload, Link as LinkIcon, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -15,6 +16,7 @@ interface GalleryItem {
 export default function ManageGallery() {
     const [gallery, setGallery] = useState<GalleryItem[]>([]);
     const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
     const [uploading, setUploading] = useState<{ [key: string]: boolean }>({});
     const router = useRouter();
 
@@ -40,12 +42,20 @@ export default function ManageGallery() {
             setGallery(validGallery);
         }
 
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/gallery`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(validGallery),
-        });
-        alert('Gallery saved successfully!');
+        setSaving(true);
+        try {
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/gallery`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(validGallery),
+            });
+            alert('Gallery saved successfully!');
+        } catch (error) {
+            console.error('Error saving gallery:', error);
+            alert('Failed to save gallery.');
+        } finally {
+            setSaving(false);
+        }
     };
 
     const addImage = () => {
@@ -93,7 +103,7 @@ export default function ManageGallery() {
         }
     };
 
-    if (loading) return <div className="p-8 text-center text-slate-400">Loading...</div>;
+    if (loading) return <Loader />;
 
     return (
         <div className="min-h-screen bg-background text-foreground">
@@ -113,9 +123,19 @@ export default function ManageGallery() {
                         </button>
                         <button
                             onClick={handleSave}
-                            className="bg-primary hover:bg-primary/90 text-black font-bold px-6 py-3 rounded-xl flex items-center transition-all shadow-lg shadow-primary/20"
+                            disabled={saving}
+                            className="bg-primary hover:bg-primary/90 text-black font-bold px-6 py-3 rounded-xl flex items-center transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <Save className="h-5 w-5 mr-2" /> Save
+                            {saving ? (
+                                <>
+                                    <div className="h-5 w-5 mr-2 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                                    Saving...
+                                </>
+                            ) : (
+                                <>
+                                    <Save className="h-5 w-5 mr-2" /> Save
+                                </>
+                            )}
                         </button>
                     </div>
                 </div>

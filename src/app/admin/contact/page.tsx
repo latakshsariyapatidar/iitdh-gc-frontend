@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/layout/Navbar';
+import Loader from '@/components/ui/Loader';
 import { Save, Plus, Trash, Upload, Link as LinkIcon, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -27,6 +28,7 @@ interface ContactInfo {
 export default function ManageContact() {
     const [contact, setContact] = useState<ContactInfo | null>(null);
     const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
     const [uploading, setUploading] = useState<{ [key: string]: boolean }>({});
     const router = useRouter();
 
@@ -65,12 +67,20 @@ export default function ManageContact() {
             }
         }
 
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/contact`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(contact),
-        });
-        alert('Contact info saved successfully!');
+        setSaving(true);
+        try {
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/contact`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(contact),
+            });
+            alert('Contact info saved successfully!');
+        } catch (error) {
+            console.error('Error saving contact info:', error);
+            alert('Failed to save contact info.');
+        } finally {
+            setSaving(false);
+        }
     };
 
     const updateField = (field: string, value: string) => {
@@ -143,7 +153,7 @@ export default function ManageContact() {
         }
     };
 
-    if (loading) return <div className="p-8 text-center text-slate-400">Loading...</div>;
+    if (loading) return <Loader />;
 
     return (
         <div className="min-h-screen bg-background text-foreground">
@@ -158,10 +168,20 @@ export default function ManageContact() {
                     </div>
                     <button
                         onClick={handleSave}
-                        className="bg-primary hover:bg-primary/90 text-black px-6 py-3 rounded-full font-bold flex items-center gap-2 transition-all shadow-lg shadow-primary/20"
+                        disabled={saving}
+                        className="bg-primary hover:bg-primary/90 text-black px-6 py-3 rounded-full font-bold flex items-center gap-2 transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        <Save className="w-5 h-5" />
-                        Save Changes
+                        {saving ? (
+                            <>
+                                <div className="h-5 w-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                                Saving...
+                            </>
+                        ) : (
+                            <>
+                                <Save className="w-5 h-5" />
+                                Save Changes
+                            </>
+                        )}
                     </button>
                 </div>
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/layout/Navbar';
+import Loader from '@/components/ui/Loader';
 import { Save, Plus, Trash, Crown } from 'lucide-react';
 import CustomSelect from '@/components/ui/CustomSelect';
 import { useRouter } from 'next/navigation';
@@ -23,6 +24,7 @@ interface Team {
 export default function ManageTeams() {
     const [teams, setTeams] = useState<Team[]>([]);
     const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
     const [uploading, setUploading] = useState<{ [key: string]: boolean }>({});
     const [selectedTeamId, setSelectedTeamId] = useState<string>("");
     const router = useRouter();
@@ -60,12 +62,20 @@ export default function ManageTeams() {
             }
         }
 
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/teams`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(teams),
-        });
-        alert('Teams saved successfully!');
+        setSaving(true);
+        try {
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/teams`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(teams),
+            });
+            alert('Teams saved successfully!');
+        } catch (error) {
+            console.error('Error saving teams:', error);
+            alert('Failed to save teams.');
+        } finally {
+            setSaving(false);
+        }
     };
 
     const updateTeamName = (index: number, name: string) => {
@@ -92,16 +102,81 @@ export default function ManageTeams() {
         setSelectedTeamId(newTeamId);
     };
 
-    const removeTeam = (index: number) => {
-        if (confirm('Are you sure you want to delete this team?')) {
+    const removeTeam = async (index: number) => {
+        const teamToDelete = teams[index];
+        if (!confirm(`Are you sure you want to delete team "${teamToDelete.name}"? This will IMMEDIATELY remove all associated data (matches, results, standings) and cannot be undone.`)) {
+            return;
+        }
+
+        setSaving(true);
+        try {
+            // 1. Fetch all related data
+            const [scheduleRes, resultsRes, standingsRes] = await Promise.all([
+                fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/schedule`),
+                fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/results`),
+                fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/standings`)
+            ]);
+
+            const schedule = await scheduleRes.json();
+            const results = await resultsRes.json();
+            const standings = await standingsRes.json();
+
+            // 2. Filter out matches/results involving the team
+            const updatedSchedule = schedule.filter((m: any) => m.teamA !== teamToDelete.name && m.teamB !== teamToDelete.name);
+            const updatedResults = results.filter((r: any) => r.teamA !== teamToDelete.name && r.teamB !== teamToDelete.name);
+
+            // 3. Update standings (clear team name if present)
+            const updatedStandings = standings.map((s: any) => {
+                const newResults = { ...s.results };
+                if (newResults.first === teamToDelete.name) newResults.first = '';
+                if (newResults.second === teamToDelete.name) newResults.second = '';
+                if (newResults.third === teamToDelete.name) newResults.third = '';
+                if (newResults.fourth === teamToDelete.name) newResults.fourth = '';
+                return { ...s, results: newResults };
+            });
+
+            // 4. Save updated data
+            await Promise.all([
+                fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/schedule`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatedSchedule),
+                }),
+                fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/results`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatedResults),
+                }),
+                fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/standings`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatedStandings),
+                })
+            ]);
+
+            // 5. Remove team locally and save
             const newTeams = [...teams];
             newTeams.splice(index, 1);
             setTeams(newTeams);
+
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/teams`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newTeams),
+            });
+
             if (newTeams.length > 0) {
                 setSelectedTeamId(newTeams[0].id);
             } else {
                 setSelectedTeamId("");
             }
+
+            alert('Team and associated data deleted successfully!');
+        } catch (error) {
+            console.error("Error deleting team:", error);
+            alert("Failed to delete team and associated data.");
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -167,7 +242,7 @@ export default function ManageTeams() {
         }
     };
 
-    if (loading) return <div className="p-8 text-center text-slate-400">Loading...</div>;
+    if (loading) return <Loader />;
 
     const selectedTeamIndex = teams.findIndex(t => t.id === selectedTeamId);
     const selectedTeam = teams[selectedTeamIndex];
@@ -191,10 +266,20 @@ export default function ManageTeams() {
                         </button>
                         <button
                             onClick={handleSave}
-                            className="bg-primary hover:bg-primary/90 text-black font-bold px-6 py-3 rounded-xl flex items-center transition-all shadow-lg shadow-primary/20"
+                            disabled={saving}
+                            className="bg-primary hover:bg-primary/90 text-black font-bold px-6 py-3 rounded-xl flex items-center transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <Save className="h-5 w-5 mr-2" />
-                            Save Changes
+                            {saving ? (
+                                <>
+                                    <div className="h-5 w-5 mr-2 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                                    Saving...
+                                </>
+                            ) : (
+                                <>
+                                    <Save className="h-5 w-5 mr-2" />
+                                    Save Changes
+                                </>
+                            )}
                         </button>
                     </div>
                 </div>

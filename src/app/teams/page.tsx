@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Navbar from '@/components/layout/Navbar';
+import Loader from '@/components/ui/Loader';
 import { Users, Crown } from 'lucide-react';
 import CustomSelect from '@/components/ui/CustomSelect';
 import { io } from 'socket.io-client';
@@ -81,7 +82,7 @@ export default function TeamsPage() {
                 </div>
 
                 {loading ? (
-                    <div className="text-center text-slate-400 py-12">Loading teams...</div>
+                    <Loader />
                 ) : (
                     <div className="max-w-4xl mx-auto">
                         {/* Team Selector */}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Navbar from '@/components/layout/Navbar';
+import Loader from '@/components/ui/Loader';
 import { Medal, Trophy, Play, FileText } from 'lucide-react';
 import CustomSelect from '@/components/ui/CustomSelect';
 import { io } from 'socket.io-client';
@@ -174,7 +175,7 @@ export default function ResultsPage() {
                         </div>
 
                         {loading ? (
-                            <div className="text-center py-8 text-slate-500">Loading results...</div>
+                            <Loader />
                         ) : filteredResults.length === 0 ? (
                             <div className="text-center py-8 bg-white/5 rounded-2xl border border-white/10">
                                 <p className="text-slate-400 text-sm">No results found for this sport.</p>

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import Navbar from '@/components/layout/Navbar';
+import Loader from '@/components/ui/Loader';
 import { Trophy, Calendar, Medal, Image as ImageIcon, Users } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -16,6 +17,7 @@ import { io } from 'socket.io-client';
 
 export default function Home() {
   const [standings, setStandings] = useState<{ men: any[], women: any[] }>({ men: [], women: [] });
+  const [loading, setLoading] = useState(true);
 
   const fetchStandings = () => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/standings`, { cache: 'no-store' })
@@ -23,6 +25,11 @@ export default function Home() {
       .then(data => {
         const calculated = calculateStandings(data);
         setStandings(calculated);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Error fetching standings:', err);
+        setLoading(false);
       });
   };
 
@@ -133,89 +140,95 @@ export default function Home() {
           ))}
         </div>
 
-        {/* Men's Standings Table */}
-        <div className="bg-card/50 backdrop-blur-md border border-border rounded-3xl overflow-hidden shadow-2xl mb-8">
-          <div className="px-6 py-4 border-b border-border bg-card/50 flex items-center justify-between">
-            <h2 className="text-3xl font-bold text-foreground flex items-center">
-              <Trophy className="h-8 w-8 text-primary mr-2" />
-              Men's GC Standings
-            </h2>
-            <div className="text-xs text-muted-foreground">Live Updates</div>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead className="text-xs text-muted-foreground uppercase bg-card/50">
-                <tr>
-                  <th className="px-6 py-3 font-semibold tracking-wider">Rank</th>
-                  <th className="px-6 py-3 font-semibold tracking-wider">Team</th>
-                  <th className="px-6 py-3 text-center font-semibold tracking-wider">🥇 Gold</th>
-                  <th className="px-6 py-3 text-center font-semibold tracking-wider">🥈 Silver</th>
-                  <th className="px-6 py-3 text-center font-semibold tracking-wider">🥉 Bronze</th>
-                  <th className="px-6 py-3 text-right font-semibold tracking-wider">Points</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border text-base">
-                {standings.men.map((team, index) => (
-                  <tr key={team.name} className="hover:bg-accent/5 transition-colors group">
-                    <td className="px-6 py-4 font-bold text-foreground">
-                      {index === 0 ? <span className="text-2xl text-chart-5">🏆</span> :
-                        index === 1 ? <span className="text-xl text-muted-foreground">🥈</span> :
-                          index === 2 ? <span className="text-xl text-amber-700">🥉</span> :
-                            <span className="text-muted-foreground">#{index + 1}</span>}
-                    </td>
-                    <td className="px-6 py-4 font-bold text-lg text-foreground group-hover:text-primary transition-colors">{team.name}</td>
-                    <td className="px-6 py-4 text-center text-muted-foreground font-bold">{team.gold}</td>
-                    <td className="px-6 py-4 text-center text-muted-foreground font-bold">{team.silver}</td>
-                    <td className="px-6 py-4 text-center text-muted-foreground font-bold">{team.bronze}</td>
-                    <td className="px-6 py-4 text-right font-black text-2xl text-primary">{team.points}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        {loading ? (
+          <Loader />
+        ) : (
+          <>
+            {/* Men's Standings Table */}
+            <div className="bg-card/50 backdrop-blur-md border border-border rounded-3xl overflow-hidden shadow-2xl mb-8">
+              <div className="px-6 py-4 border-b border-border bg-card/50 flex items-center justify-between">
+                <h2 className="text-3xl font-bold text-foreground flex items-center">
+                  <Trophy className="h-8 w-8 text-primary mr-2" />
+                  Men's GC Standings
+                </h2>
+                <div className="text-xs text-muted-foreground">Live Updates</div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead className="text-xs text-muted-foreground uppercase bg-card/50">
+                    <tr>
+                      <th className="px-6 py-3 font-semibold tracking-wider">Rank</th>
+                      <th className="px-6 py-3 font-semibold tracking-wider">Team</th>
+                      <th className="px-6 py-3 text-center font-semibold tracking-wider">🥇 Gold</th>
+                      <th className="px-6 py-3 text-center font-semibold tracking-wider">🥈 Silver</th>
+                      <th className="px-6 py-3 text-center font-semibold tracking-wider">🥉 Bronze</th>
+                      <th className="px-6 py-3 text-right font-semibold tracking-wider">Points</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border text-base">
+                    {standings.men.map((team, index) => (
+                      <tr key={team.name} className="hover:bg-accent/5 transition-colors group">
+                        <td className="px-6 py-4 font-bold text-foreground">
+                          {index === 0 ? <span className="text-2xl text-chart-5">🏆</span> :
+                            index === 1 ? <span className="text-xl text-muted-foreground">🥈</span> :
+                              index === 2 ? <span className="text-xl text-amber-700">🥉</span> :
+                                <span className="text-muted-foreground">#{index + 1}</span>}
+                        </td>
+                        <td className="px-6 py-4 font-bold text-lg text-foreground group-hover:text-primary transition-colors">{team.name}</td>
+                        <td className="px-6 py-4 text-center text-muted-foreground font-bold">{team.gold}</td>
+                        <td className="px-6 py-4 text-center text-muted-foreground font-bold">{team.silver}</td>
+                        <td className="px-6 py-4 text-center text-muted-foreground font-bold">{team.bronze}</td>
+                        <td className="px-6 py-4 text-right font-black text-2xl text-primary">{team.points}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
 
-        {/* Women's Standings Table */}
-        <div className="bg-card/50 backdrop-blur-md border border-border rounded-3xl overflow-hidden shadow-2xl">
-          <div className="px-6 py-4 border-b border-border bg-card/50 flex items-center justify-between">
-            <h2 className="text-3xl font-bold text-foreground flex items-center">
-              <Trophy className="h-8 w-8 text-chart-5 mr-2" />
-              Women's GC Standings
-            </h2>
-            <div className="text-xs text-muted-foreground">Live Updates</div>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead className="text-xs text-muted-foreground uppercase bg-card/50">
-                <tr>
-                  <th className="px-6 py-3 font-semibold tracking-wider">Rank</th>
-                  <th className="px-6 py-3 font-semibold tracking-wider">Team</th>
-                  <th className="px-6 py-3 text-center font-semibold tracking-wider">🥇 Gold</th>
-                  <th className="px-6 py-3 text-center font-semibold tracking-wider">🥈 Silver</th>
-                  <th className="px-6 py-3 text-center font-semibold tracking-wider">🥉 Bronze</th>
-                  <th className="px-6 py-3 text-right font-semibold tracking-wider">Points</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border text-base">
-                {standings.women.map((team, index) => (
-                  <tr key={team.name} className="hover:bg-accent/5 transition-colors group">
-                    <td className="px-6 py-4 font-bold text-foreground">
-                      {index === 0 ? <span className="text-2xl text-chart-5">🏆</span> :
-                        index === 1 ? <span className="text-xl text-muted-foreground">🥈</span> :
-                          index === 2 ? <span className="text-xl text-amber-700">🥉</span> :
-                            <span className="text-muted-foreground">#{index + 1}</span>}
-                    </td>
-                    <td className="px-6 py-4 font-bold text-lg text-foreground group-hover:text-primary transition-colors">{team.name}</td>
-                    <td className="px-6 py-4 text-center text-muted-foreground font-bold">{team.gold}</td>
-                    <td className="px-6 py-4 text-center text-muted-foreground font-bold">{team.silver}</td>
-                    <td className="px-6 py-4 text-center text-muted-foreground font-bold">{team.bronze}</td>
-                    <td className="px-6 py-4 text-right font-black text-2xl text-primary">{team.points}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+            {/* Women's Standings Table */}
+            <div className="bg-card/50 backdrop-blur-md border border-border rounded-3xl overflow-hidden shadow-2xl">
+              <div className="px-6 py-4 border-b border-border bg-card/50 flex items-center justify-between">
+                <h2 className="text-3xl font-bold text-foreground flex items-center">
+                  <Trophy className="h-8 w-8 text-chart-5 mr-2" />
+                  Women's GC Standings
+                </h2>
+                <div className="text-xs text-muted-foreground">Live Updates</div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead className="text-xs text-muted-foreground uppercase bg-card/50">
+                    <tr>
+                      <th className="px-6 py-3 font-semibold tracking-wider">Rank</th>
+                      <th className="px-6 py-3 font-semibold tracking-wider">Team</th>
+                      <th className="px-6 py-3 text-center font-semibold tracking-wider">🥇 Gold</th>
+                      <th className="px-6 py-3 text-center font-semibold tracking-wider">🥈 Silver</th>
+                      <th className="px-6 py-3 text-center font-semibold tracking-wider">🥉 Bronze</th>
+                      <th className="px-6 py-3 text-right font-semibold tracking-wider">Points</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border text-base">
+                    {standings.women.map((team, index) => (
+                      <tr key={team.name} className="hover:bg-accent/5 transition-colors group">
+                        <td className="px-6 py-4 font-bold text-foreground">
+                          {index === 0 ? <span className="text-2xl text-chart-5">🏆</span> :
+                            index === 1 ? <span className="text-xl text-muted-foreground">🥈</span> :
+                              index === 2 ? <span className="text-xl text-amber-700">🥉</span> :
+                                <span className="text-muted-foreground">#{index + 1}</span>}
+                        </td>
+                        <td className="px-6 py-4 font-bold text-lg text-foreground group-hover:text-primary transition-colors">{team.name}</td>
+                        <td className="px-6 py-4 text-center text-muted-foreground font-bold">{team.gold}</td>
+                        <td className="px-6 py-4 text-center text-muted-foreground font-bold">{team.silver}</td>
+                        <td className="px-6 py-4 text-center text-muted-foreground font-bold">{team.bronze}</td>
+                        <td className="px-6 py-4 text-right font-black text-2xl text-primary">{team.points}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        )}
       </main>
 
       {/* Footer */}

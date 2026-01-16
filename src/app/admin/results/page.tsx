@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/layout/Navbar';
+import Loader from '@/components/ui/Loader';
 import CustomSelect from '@/components/ui/CustomSelect';
 import { Save, Plus, Trash, FileText, Link as LinkIcon, Upload, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -58,6 +59,7 @@ export default function ManageResults() {
     const [results, setResults] = useState<Result[]>([]);
     const [teams, setTeams] = useState<Team[]>([]);
     const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
     const [selectedResultId, setSelectedResultId] = useState<string>("");
     const [filterSport, setFilterSport] = useState<string>("All");
     const [uploading, setUploading] = useState(false);
@@ -112,12 +114,20 @@ export default function ManageResults() {
             }
         }
 
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/results`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(results),
-        });
-        alert('Results published successfully!');
+        setSaving(true);
+        try {
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/results`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(results),
+            });
+            alert('Results published successfully!');
+        } catch (error) {
+            console.error('Error saving results:', error);
+            alert('Failed to save results.');
+        } finally {
+            setSaving(false);
+        }
     };
 
     const addResult = () => {
@@ -183,7 +193,7 @@ export default function ManageResults() {
         }
     };
 
-    if (loading) return <div className="min-h-screen bg-background flex items-center justify-center text-slate-400">Loading...</div>;
+    if (loading) return <Loader />;
 
     const selectedResultIndex = results.findIndex(r => r.id === selectedResultId);
     const selectedResult = results[selectedResultIndex];
@@ -206,9 +216,18 @@ export default function ManageResults() {
                         </button>
                         <button
                             onClick={handleSave}
-                            className="bg-primary hover:bg-primary/90 text-black font-bold px-6 py-3 rounded-xl flex items-center transition-all shadow-lg shadow-primary/20"
+                            disabled={saving}
+                            className="bg-primary hover:bg-primary/90 text-black font-bold px-6 py-3 rounded-xl flex items-center transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <Save className="h-5 w-5 mr-2" /> Publish Live
+                            {saving ? (
+                                <>
+                                    <div className="h-5 w-5 mr-2 border-2 border-black border-t-transparent rounded-full animate-spin" /> Publish Live
+                                </>
+                            ) : (
+                                <>
+                                    <Save className="h-5 w-5 mr-2" /> Publish Live
+                                </>
+                            )}
                         </button>
                     </div>
                 </div>

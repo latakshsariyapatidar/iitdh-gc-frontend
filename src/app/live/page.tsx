@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/layout/Navbar';
+import Loader from '@/components/ui/Loader';
 import { Play, Calendar, Trophy } from 'lucide-react';
 
 export default function LivePage() {
@@ -39,7 +40,7 @@ export default function LivePage() {
                 </div>
 
                 {loading ? (
-                    <div className="text-center py-12 text-slate-500">Loading live matches...</div>
+                    <Loader />
                 ) : liveMatches.length === 0 ? (
                     <div className="text-center py-20 bg-white/5 rounded-3xl border border-white/10">
                         <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-6">
