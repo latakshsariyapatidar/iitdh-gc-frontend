@@ -59,22 +59,26 @@ export default function ManageGallery() {
     };
 
     const addImage = () => {
-        setGallery([
-            { id: Date.now().toString(), title: '', url: '', type: 'url' }, // Added type: 'url' | 'upload'
-            ...gallery,
+        setGallery(prevGallery => [
+            { id: Date.now().toString(), title: '', url: '', type: 'url' },
+            ...prevGallery,
         ]);
     };
 
     const updateImage = (index: number, field: string, value: string) => {
-        const newGallery = [...gallery];
-        (newGallery[index] as any)[field] = value;
-        setGallery(newGallery);
+        setGallery(prevGallery => {
+            const newGallery = [...prevGallery];
+            newGallery[index] = { ...newGallery[index], [field]: value };
+            return newGallery;
+        });
     };
 
     const removeImage = (index: number) => {
-        const newGallery = [...gallery];
-        newGallery.splice(index, 1);
-        setGallery(newGallery);
+        setGallery(prevGallery => {
+            const newGallery = [...prevGallery];
+            newGallery.splice(index, 1);
+            return newGallery;
+        });
     };
 
     const handleFileUpload = async (index: number, file: File) => {

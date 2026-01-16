@@ -79,10 +79,23 @@ export default function ManageResults() {
                 const resultsData = await resultsRes.json();
                 const teamsData = await teamsRes.json();
 
-                setResults(resultsData);
+                // Ensure all results have required fields
+                const sanitizedResults = resultsData.map((result: any) => ({
+                    ...result,
+                    scoreA: result.scoreA || 0,
+                    scoreB: result.scoreB || 0,
+                    winner: result.winner || '',
+                    date: result.date || '',
+                    liveLink: result.liveLink || '',
+                    scoreSheetType: result.scoreSheetType || 'url',
+                    scoreSheetLink: result.scoreSheetLink || '',
+                    category: result.category || 'Men'
+                }));
+
+                setResults(sanitizedResults);
                 setTeams(teamsData);
-                if (resultsData.length > 0) {
-                    setSelectedResultId(resultsData[0].id);
+                if (sanitizedResults.length > 0) {
+                    setSelectedResultId(sanitizedResults[0].id);
                 }
                 setLoading(false);
             } catch (error) {
@@ -97,19 +110,19 @@ export default function ManageResults() {
     const handleSave = async () => {
         for (const result of results) {
             if (!result.teamA || !result.teamB) {
-                alert("Both Team A and Team B must be selected for all matches.");
+                alert(`Match between ${result.teamA || 'Unknown'} and ${result.teamB || 'Unknown'} must have both teams selected.`);
                 return;
             }
             if (result.teamA === result.teamB) {
-                alert("Team A and Team B cannot be the same.");
+                alert(`Team A and Team B cannot be the same for match between ${result.teamA} and ${result.teamB}.`);
                 return;
             }
             if (result.scoreA < 0 || result.scoreB < 0) {
-                alert("Scores cannot be negative.");
+                alert(`Scores cannot be negative for match between ${result.teamA} and ${result.teamB}.`);
                 return;
             }
             if (!result.winner) {
-                alert("Please select a Winner (or Draw) for all matches.");
+                alert(`Please select a Winner (or Draw) for match between ${result.teamA} and ${result.teamB}.`);
                 return;
             }
         }
@@ -150,21 +163,39 @@ export default function ManageResults() {
     };
 
     const updateResult = (index: number, field: string, value: string | number) => {
-        const newResults = [...results];
-        (newResults[index] as any)[field] = value;
-        setResults(newResults);
+        setResults(prevResults => {
+            const newResults = [...prevResults];
+            newResults[index] = { ...newResults[index], [field]: value };
+            return newResults;
+        });
     };
 
     const removeResult = (index: number) => {
+        if (index === -1) return;
         if (confirm('Are you sure you want to delete this result?')) {
-            const newResults = [...results];
-            newResults.splice(index, 1);
-            setResults(newResults);
-            if (newResults.length > 0) {
-                setSelectedResultId(newResults[0].id);
-            } else {
-                setSelectedResultId("");
-            }
+            setResults(prevResults => {
+                const newResults = [...prevResults];
+                newResults.splice(index, 1);
+
+                // Determine next selection
+                let nextResult = newResults[index];
+                if (!nextResult) {
+                    nextResult = newResults[index - 1];
+                }
+
+                if (nextResult) {
+                    if (filterSport === "All" || nextResult.sport === filterSport) {
+                        setSelectedResultId(nextResult.id);
+                    } else {
+                        const visibleResults = newResults.filter(r => r.sport === filterSport);
+                        setSelectedResultId(visibleResults.length > 0 ? visibleResults[0].id : "");
+                    }
+                } else {
+                    setSelectedResultId("");
+                }
+
+                return newResults;
+            });
         }
     };
 
@@ -294,7 +325,7 @@ export default function ManageResults() {
                                 <label className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-2 block">Date</label>
                                 <input
                                     type="date"
-                                    value={selectedResult.date}
+                                    value={selectedResult.date || ''}
                                     onChange={(e) => updateResult(selectedResultIndex, 'date', e.target.value)}
                                     className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:border-primary focus:outline-none transition-colors"
                                 />

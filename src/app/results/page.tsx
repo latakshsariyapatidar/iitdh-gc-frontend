@@ -37,14 +37,18 @@ export default function ResultsPage() {
 
     const [selectedSport, setSelectedSport] = useState<string | null>(null);
 
-    const calculateStandings = (events: unknown[]) => {
+    const calculateStandings = (events: unknown[], teams: any[]) => {
         const scoresMen: Record<string, Standing> = {};
         const scoresWomen: Record<string, Standing> = {};
 
-        // Initialize scores
-        ['Hostel 1', 'Hostel 2', 'Hostel 3', 'Hostel 4'].forEach(h => {
-            scoresMen[h] = { name: h, points: 0, gold: 0, silver: 0, bronze: 0 };
-            scoresWomen[h] = { name: h, points: 0, gold: 0, silver: 0, bronze: 0 };
+        // Initialize scores with dynamic teams filtered by category
+        teams.forEach((team: any) => {
+            if (team.category === 'Women') {
+                scoresWomen[team.name] = { name: team.name, points: 0, gold: 0, silver: 0, bronze: 0 };
+            } else {
+                // Default to Men if category is missing or 'Men'
+                scoresMen[team.name] = { name: team.name, points: 0, gold: 0, silver: 0, bronze: 0 };
+            }
         });
 
         events.forEach((event: any) => {
@@ -89,10 +93,11 @@ export default function ResultsPage() {
     const fetchData = useCallback(() => {
         Promise.all([
             fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/results`, { cache: 'no-store' }).then(res => res.json()),
-            fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/standings`, { cache: 'no-store' }).then(res => res.json())
-        ]).then(([resultsData, standingsData]) => {
+            fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/standings`, { cache: 'no-store' }).then(res => res.json()),
+            fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/teams`, { cache: 'no-store' }).then(res => res.json())
+        ]).then(([resultsData, standingsData, teamsData]) => {
             setResults(resultsData);
-            setStandings(calculateStandings(standingsData));
+            setStandings(calculateStandings(standingsData, teamsData));
             setLoading(false);
         }).catch((err) => {
             console.error('ResultsPage: Error fetching data:', err);
@@ -120,7 +125,7 @@ export default function ResultsPage() {
         });
 
         socket.on('dataUpdate', (data: { type: string }) => {
-            if (data.type === 'results' || data.type === 'standings') {
+            if (data.type === 'results' || data.type === 'standings' || data.type === 'teams') {
                 fetchData();
             }
         });

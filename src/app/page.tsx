@@ -20,15 +20,17 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   const fetchStandings = () => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/standings`, { cache: 'no-store' })
-      .then(res => res.json())
-      .then(data => {
-        const calculated = calculateStandings(data);
+    Promise.all([
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/standings`, { cache: 'no-store' }).then(res => res.json()),
+      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/teams`, { cache: 'no-store' }).then(res => res.json())
+    ])
+      .then(([standingsData, teamsData]) => {
+        const calculated = calculateStandings(standingsData, teamsData);
         setStandings(calculated);
         setLoading(false);
       })
       .catch(err => {
-        console.error('Error fetching standings:', err);
+        console.error('Error fetching data:', err);
         setLoading(false);
       });
   };
@@ -43,7 +45,7 @@ export default function Home() {
     });
 
     socket.on('dataUpdate', (data: { type: string }) => {
-      if (data.type === 'standings') {
+      if (data.type === 'standings' || data.type === 'teams') {
         fetchStandings();
       }
     });
@@ -53,14 +55,18 @@ export default function Home() {
     };
   }, []);
 
-  const calculateStandings = (events: any[]) => {
+  const calculateStandings = (events: any[], teams: any[]) => {
     const scoresMen: any = {};
     const scoresWomen: any = {};
 
-    // Initialize scores
-    ['Hostel 1', 'Hostel 2', 'Hostel 3', 'Hostel 4'].forEach(h => {
-      scoresMen[h] = { name: h, points: 0, gold: 0, silver: 0, bronze: 0 };
-      scoresWomen[h] = { name: h, points: 0, gold: 0, silver: 0, bronze: 0 };
+    // Initialize scores with dynamic teams filtered by category
+    teams.forEach(team => {
+      if (team.category === 'Women') {
+        scoresWomen[team.name] = { name: team.name, points: 0, gold: 0, silver: 0, bronze: 0 };
+      } else {
+        // Default to Men if category is missing or 'Men'
+        scoresMen[team.name] = { name: team.name, points: 0, gold: 0, silver: 0, bronze: 0 };
+      }
     });
 
     events.forEach(event => {
