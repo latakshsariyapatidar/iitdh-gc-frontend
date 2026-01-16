@@ -47,8 +47,8 @@ export default function ManageStreams() {
         const fetchData = async () => {
             try {
                 const [scheduleRes, resultsRes] = await Promise.all([
-                    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/schedule`),
-                    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/results`)
+                    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/schedule`),
+                    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/results`)
                 ]);
 
                 const scheduleData = await scheduleRes.json();
@@ -82,7 +82,7 @@ export default function ManageStreams() {
     const handleSave = async () => {
         setSaving(true);
         try {
-            await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/schedule`, {
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/schedule`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(results),

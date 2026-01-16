@@ -56,8 +56,8 @@ export default function ManageSchedule() {
         const fetchData = async () => {
             try {
                 const [scheduleRes, teamsRes] = await Promise.all([
-                    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/schedule`),
-                    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/teams`)
+                    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/schedule`),
+                    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/teams`)
                 ]);
 
                 const scheduleData = await scheduleRes.json();
@@ -105,7 +105,7 @@ export default function ManageSchedule() {
 
         setSaving(true);
         try {
-            await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/schedule`, {
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/schedule`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(schedule),

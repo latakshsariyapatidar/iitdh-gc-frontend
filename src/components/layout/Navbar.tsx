@@ -28,7 +28,7 @@ export default function Navbar() {
     const [isLiveNow, setIsLiveNow] = useState(false);
 
     useEffect(() => {
-        fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/results`)
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/results`)
             .then((res) => res.json())
             .then((data) => {
                 // const active = data.some((r: { streamStatus: string }) => r.streamStatus === 'Live' || r.streamStatus === 'Upcoming');

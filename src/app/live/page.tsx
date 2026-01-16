@@ -10,7 +10,7 @@ export default function LivePage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/results`)
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/results`)
             .then((res) => res.json())
             .then((data) => {
                 // Filter for matches that have a live link or are recent

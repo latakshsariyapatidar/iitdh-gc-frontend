@@ -21,8 +21,8 @@ export default function Home() {
 
   const fetchStandings = () => {
     Promise.all([
-      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/standings`, { cache: 'no-store' }).then(res => res.json()),
-      fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/teams`, { cache: 'no-store' }).then(res => res.json())
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/standings`, { cache: 'no-store' }).then(res => res.json()),
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/teams`, { cache: 'no-store' }).then(res => res.json())
     ])
       .then(([standingsData, teamsData]) => {
         const calculated = calculateStandings(standingsData, teamsData);
@@ -38,7 +38,7 @@ export default function Home() {
   useEffect(() => {
     fetchStandings();
 
-    const socket = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000');
+    const socket = io(process.env.NEXT_PUBLIC_API_URL);
 
     socket.on('connect', () => {
       console.log('Connected to socket server');

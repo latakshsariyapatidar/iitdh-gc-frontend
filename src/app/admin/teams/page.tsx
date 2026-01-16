@@ -34,7 +34,7 @@ export default function ManageTeams() {
         const token = localStorage.getItem('adminToken');
         if (!token) router.push('/admin/login');
 
-        fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/teams`)
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/teams`)
             .then((res) => res.json())
             .then((data) => {
                 // Ensure all teams have a category (migration for existing data)
@@ -70,7 +70,7 @@ export default function ManageTeams() {
 
         setSaving(true);
         try {
-            await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/teams`, {
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/teams`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(teams),
@@ -129,9 +129,9 @@ export default function ManageTeams() {
         try {
             // 1. Fetch all related data
             const [scheduleRes, resultsRes, standingsRes] = await Promise.all([
-                fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/schedule`),
-                fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/results`),
-                fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/standings`)
+                fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/schedule`),
+                fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/results`),
+                fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/standings`)
             ]);
 
             const schedule = await scheduleRes.json();
@@ -154,17 +154,17 @@ export default function ManageTeams() {
 
             // 4. Save updated data
             await Promise.all([
-                fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/schedule`, {
+                fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/schedule`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(updatedSchedule),
                 }),
-                fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/results`, {
+                fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/results`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(updatedResults),
                 }),
-                fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/standings`, {
+                fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/standings`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(updatedStandings),
@@ -176,7 +176,7 @@ export default function ManageTeams() {
             newTeams.splice(index, 1);
             setTeams(newTeams);
 
-            await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/teams`, {
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/teams`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newTeams),
@@ -263,7 +263,7 @@ export default function ManageTeams() {
         formData.append('image', file);
 
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/upload`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/upload`, {
                 method: 'POST',
                 body: formData,
             });

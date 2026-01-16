@@ -36,7 +36,7 @@ export default function ManageContact() {
         const token = localStorage.getItem('adminToken');
         if (!token) router.push('/admin/login');
 
-        fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/contact`)
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/contact`)
             .then((res) => res.json())
             .then((data) => {
                 // Ensure proper default structure
@@ -69,7 +69,7 @@ export default function ManageContact() {
 
         setSaving(true);
         try {
-            await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/contact`, {
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/contact`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(contact),
@@ -135,7 +135,7 @@ export default function ManageContact() {
         formData.append('image', file);
 
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/upload`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/upload`, {
                 method: 'POST',
                 body: formData,
             });

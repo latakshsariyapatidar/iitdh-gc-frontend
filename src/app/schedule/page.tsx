@@ -25,7 +25,7 @@ export default function SchedulePage() {
 
     const fetchSchedule = useCallback(async () => {
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/schedule`, { cache: 'no-store' });
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/schedule`, { cache: 'no-store' });
             const data = await res.json();
             setSchedule(data);
             setLoading(false);
@@ -48,7 +48,7 @@ export default function SchedulePage() {
     useEffect(() => {
         fetchSchedule();
 
-        const socket = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000');
+        const socket = io(process.env.NEXT_PUBLIC_API_URL);
 
         socket.on('dataUpdate', (data: { type: string }) => {
             if (data.type === 'schedule') {

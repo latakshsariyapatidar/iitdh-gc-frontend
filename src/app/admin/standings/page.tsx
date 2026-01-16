@@ -41,8 +41,8 @@ export default function ManageStandings() {
         if (!token) router.push('/admin/login');
 
         Promise.all([
-            fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/standings`).then(res => res.json()),
-            fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/teams`).then(res => res.json())
+            fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/standings`).then(res => res.json()),
+            fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/teams`).then(res => res.json())
         ]).then(([standingsData, teamsData]) => {
             setStandings(standingsData);
             setTeams(teamsData);
@@ -73,7 +73,7 @@ export default function ManageStandings() {
 
         setSaving(true);
         try {
-            await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/standings`, {
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/standings`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(standings),

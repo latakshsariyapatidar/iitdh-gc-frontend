@@ -72,8 +72,8 @@ export default function ManageResults() {
         const fetchData = async () => {
             try {
                 const [resultsRes, teamsRes] = await Promise.all([
-                    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/results`),
-                    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/teams`)
+                    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/results`),
+                    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/teams`)
                 ]);
 
                 const resultsData = await resultsRes.json();
@@ -129,7 +129,7 @@ export default function ManageResults() {
 
         setSaving(true);
         try {
-            await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/results`, {
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/results`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(results),
@@ -206,7 +206,7 @@ export default function ManageResults() {
         formData.append('image', file);
 
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/upload`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/upload`, {
                 method: 'POST',
                 body: formData,
             });

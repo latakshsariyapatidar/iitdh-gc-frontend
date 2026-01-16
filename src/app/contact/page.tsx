@@ -12,7 +12,7 @@ export default function ContactPage() {
 
     const fetchContact = async () => {
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/contact`);
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/contact`);
             const data = await res.json();
             setContact(data);
             setLoading(false);
@@ -25,7 +25,7 @@ export default function ContactPage() {
     useEffect(() => {
         fetchContact();
 
-        const socket = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000');
+        const socket = io(process.env.NEXT_PUBLIC_API_URL);
 
         socket.on('dataUpdate', (data: { type: string }) => {
             if (data.type === 'contact') {
