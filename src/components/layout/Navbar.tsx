@@ -31,8 +31,9 @@ export default function Navbar() {
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/results`)
             .then((res) => res.json())
             .then((data) => {
-                // const active = data.some((r: { streamStatus: string }) => r.streamStatus === 'Live' || r.streamStatus === 'Upcoming');
-                const live = data.some((r: { streamStatus: string }) => r.streamStatus === 'Live');
+                const safeData = Array.isArray(data) ? data : (data ? [data] : []);
+                // const active = safeData.some((r: { streamStatus: string }) => r.streamStatus === 'Live' || r.streamStatus === 'Upcoming');
+                const live = safeData.some((r: { streamStatus: string }) => r.streamStatus === 'Live');
                 // setHasActiveStream(active);
                 setIsLiveNow(live);
             })

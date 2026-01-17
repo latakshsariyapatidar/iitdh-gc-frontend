@@ -53,6 +53,7 @@ interface Result {
     liveLink: string;
     scoreSheetType?: 'url' | 'upload';
     scoreSheetLink?: string;
+    streamStatus?: string;
 }
 
 export default function ManageResults() {
@@ -79,8 +80,10 @@ export default function ManageResults() {
                 const resultsData = await resultsRes.json();
                 const teamsData = await teamsRes.json();
 
+                const safeResults = Array.isArray(resultsData) ? resultsData : (resultsData ? [resultsData] : []);
+
                 // Ensure all results have required fields
-                const sanitizedResults = resultsData.map((result: any) => ({
+                const sanitizedResults = safeResults.map((result: any) => ({
                     ...result,
                     scoreA: result.scoreA || 0,
                     scoreB: result.scoreB || 0,
@@ -89,7 +92,8 @@ export default function ManageResults() {
                     liveLink: result.liveLink || '',
                     scoreSheetType: result.scoreSheetType || 'url',
                     scoreSheetLink: result.scoreSheetLink || '',
-                    category: result.category || 'Men'
+                    category: result.category || 'Men',
+                    streamStatus: result.streamStatus || 'Ended'
                 }));
 
                 setResults(sanitizedResults);
@@ -155,7 +159,8 @@ export default function ManageResults() {
             scoreB: 0,
             winner: '',
             date: '',
-            liveLink: ''
+            liveLink: '',
+            streamStatus: 'Ended'
         };
 
         setResults([newResult, ...results]);
@@ -304,7 +309,7 @@ export default function ManageResults() {
 
                 {selectedResult ? (
                     <div className="bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10 flex flex-col gap-6 relative group hover:border-white/20 transition-colors">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                             <div>
                                 <label className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-2 block">Sport</label>
                                 <CustomSelect
@@ -337,6 +342,18 @@ export default function ManageResults() {
                                     onChange={(e) => updateResult(selectedResultIndex, 'liveLink', e.target.value)}
                                     className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:border-primary focus:outline-none transition-colors"
                                     placeholder="https://youtube.com/..."
+                                />
+                            </div>
+                            <div>
+                                <label className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-2 block">Stream Status</label>
+                                <CustomSelect
+                                    value={selectedResult.streamStatus || 'Ended'}
+                                    onValueChange={(val) => updateResult(selectedResultIndex, 'streamStatus', val)}
+                                    options={[
+                                        { value: 'Ended', label: 'Ended' },
+                                        { value: 'Live', label: 'Live' },
+                                        { value: 'Upcoming', label: 'Upcoming' }
+                                    ]}
                                 />
                             </div>
                         </div>

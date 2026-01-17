@@ -10,15 +10,31 @@ export default function LivePage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/results`)
-            .then((res) => res.json())
-            .then((data) => {
-                // Filter for matches that have a live link or are recent
-                setResults(data);
+        Promise.all([
+            fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/results`),
+            fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/schedule`)
+        ])
+            .then(([resResults, resSchedule]) => Promise.all([resResults.json(), resSchedule.json()]))
+            .then(([resultsData, scheduleData]) => {
+                // Combine results and schedule
+                // If a match exists in both (by ID), prefer the result as it might have updated status
+                const safeResults = Array.isArray(resultsData) ? resultsData : (resultsData ? [resultsData] : []);
+                const safeSchedule = Array.isArray(scheduleData) ? scheduleData : (scheduleData ? [scheduleData] : []);
+
+                const combined = [...safeResults];
+                const resultIds = new Set(safeResults.map((r: any) => r.id));
+
+                safeSchedule.forEach((match: any) => {
+                    if (!resultIds.has(match.id)) {
+                        combined.push(match);
+                    }
+                });
+
+                setResults(combined);
                 setLoading(false);
             })
             .catch((err) => {
-                console.error('Error fetching results:', err);
+                console.error('Error fetching data:', err);
                 setLoading(false);
             });
     }, []);

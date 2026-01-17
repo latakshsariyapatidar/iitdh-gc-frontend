@@ -54,18 +54,21 @@ export default function ManageStreams() {
                 const scheduleData = await scheduleRes.json();
                 const resultsData = await resultsRes.json();
 
+                const safeSchedule = Array.isArray(scheduleData) ? scheduleData : (scheduleData ? [scheduleData] : []);
+                const safeResults = Array.isArray(resultsData) ? resultsData : (resultsData ? [resultsData] : []);
+
                 // Merge both datasets - use a Map to avoid duplicates by id
                 // Results data takes priority (may have updated stream info)
                 const matchMap = new Map();
 
                 // Add schedule matches first
-                scheduleData.forEach((match: any) => {
-                    matchMap.set(match.id, match);
+                safeSchedule.forEach((match: any) => {
+                    matchMap.set(match.id, { ...match, source: 'schedule' });
                 });
 
                 // Add/override with results matches (they may have stream info already)
-                resultsData.forEach((match: any) => {
-                    matchMap.set(match.id, match);
+                safeResults.forEach((match: any) => {
+                    matchMap.set(match.id, { ...match, source: 'result' });
                 });
 
                 setResults(Array.from(matchMap.values()));
@@ -82,11 +85,21 @@ export default function ManageStreams() {
     const handleSave = async () => {
         setSaving(true);
         try {
-            await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/schedule`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(results),
-            });
+            const scheduleUpdates = results.filter(r => r.source === 'schedule');
+            const resultUpdates = results.filter(r => r.source === 'result');
+
+            await Promise.all([
+                fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/schedule`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(scheduleUpdates),
+                }),
+                fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/results`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(resultUpdates),
+                })
+            ]);
             alert('Streams saved successfully!');
         } catch (error) {
             console.error('Error saving streams:', error);

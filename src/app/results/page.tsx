@@ -96,7 +96,8 @@ export default function ResultsPage() {
             fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/standings`, { cache: 'no-store' }).then(res => res.json()),
             fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/teams`, { cache: 'no-store' }).then(res => res.json())
         ]).then(([resultsData, standingsData, teamsData]) => {
-            setResults(resultsData);
+            const safeResults = Array.isArray(resultsData) ? resultsData : (resultsData ? [resultsData] : []);
+            setResults(safeResults);
             setStandings(calculateStandings(standingsData, teamsData));
             setLoading(false);
         }).catch((err) => {
