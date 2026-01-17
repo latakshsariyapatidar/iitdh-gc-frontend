@@ -438,7 +438,7 @@ export default function ManageResults() {
                                     value={selectedResult.teamA}
                                     onValueChange={(val) => updateResult(selectedResultIndex, 'teamA', val)}
                                     placeholder="Select Team"
-                                    options={teams.map(t => ({ value: t.name, label: t.name }))}
+                                    options={Array.from(new Set(teams.map(t => t.name))).map(name => ({ value: name, label: name }))}
                                     className="bg-transparent border-b border-white/10 rounded-none p-2 text-lg font-medium"
                                 />
                             </div>
@@ -463,7 +463,7 @@ export default function ManageResults() {
                                     value={selectedResult.teamB}
                                     onValueChange={(val) => updateResult(selectedResultIndex, 'teamB', val)}
                                     placeholder="Select Team"
-                                    options={teams.map(t => ({ value: t.name, label: t.name }))}
+                                    options={Array.from(new Set(teams.map(t => t.name))).map(name => ({ value: name, label: name }))}
                                     className="bg-transparent border-b border-white/10 rounded-none p-2 text-lg font-medium text-right"
                                 />
                             </div>
