@@ -70,15 +70,9 @@ export default function Navbar() {
                                     <Link
                                         key={link.href}
                                         href={link.href}
-                                        className={`relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${link.isLive
-                                            ? 'text-primary-foreground bg-primary/80 border border-primary hover:bg-primary animate-pulse-slow'
-                                            : 'text-muted-foreground hover:text-primary hover:bg-primary/10'
-                                            }`}
+                                        className={`relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 text-muted-foreground hover:text-primary hover:bg-primary/10`}
                                     >
                                         {link.label}
-                                        {link.isLive && (
-                                            <span className="absolute -top-1 -right-1 w-2 h-2 bg-accent rounded-full animate-ping" />
-                                        )}
                                     </Link>
                                 ))}
                             </div>
@@ -104,10 +98,7 @@ export default function Navbar() {
                                         key={link.href}
                                         href={link.href}
                                         onClick={() => setIsOpen(false)}
-                                        className={`px-4 py-3 rounded-lg text-base font-medium transition-colors ${link.isLive
-                                            ? 'text-primary bg-primary/20 border border-primary/50'
-                                            : 'text-muted-foreground hover:text-foreground hover:bg-accent/10'
-                                            }`}
+                                        className={`px-4 py-3 rounded-lg text-base font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-accent/10`}
                                     >
                                         {link.label}
                                     </Link>

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Navbar from '@/components/layout/Navbar';
 import Loader from '@/components/ui/Loader';
 import { Save, Plus, Trash, Trophy, ChevronDown, RotateCcw } from 'lucide-react';
+import PasswordModal from '@/components/ui/PasswordModal';
 import { useRouter } from 'next/navigation';
 import * as Select from '@radix-ui/react-select';
 
@@ -34,7 +35,14 @@ export default function ManageStandings() {
     const [teams, setTeams] = useState<Team[]>([]);
     const [selectedSport, setSelectedSport] = useState<string>("");
     const [selectedCategory, setSelectedCategory] = useState<string>("");
+    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+    const [confirmCallback, setConfirmCallback] = useState<((password: string) => Promise<boolean>) | null>(null);
     const router = useRouter();
+
+    const handleLogout = () => {
+        localStorage.removeItem('adminToken');
+        router.push('/admin/login');
+    };
 
     useEffect(() => {
         const token = localStorage.getItem('adminToken');
@@ -63,25 +71,39 @@ export default function ManageStandings() {
         });
     }, [router]);
 
-    const handleSave = async () => {
+    const handleSaveClick = () => {
         for (const event of standings) {
             if (!event.sport) {
                 alert("Sport Name is required for all events.");
                 return;
             }
         }
+        setConfirmCallback(() => handleConfirmSave);
+        setIsPasswordModalOpen(true);
+    };
 
+    const handleConfirmSave = async (password: string): Promise<boolean> => {
         setSaving(true);
         try {
-            await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/standings`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/standings`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-admin-password': password
+                },
                 body: JSON.stringify(standings),
             });
-            alert('Standings saved successfully!');
+
+            if (res.ok) {
+                alert('Standings saved successfully!');
+                return true;
+            } else {
+                return false;
+            }
         } catch (error) {
             console.error('Error saving standings:', error);
             alert('Failed to save standings.');
+            return false;
         } finally {
             setSaving(false);
         }
@@ -185,7 +207,7 @@ export default function ManageStandings() {
                             Add Event
                         </button>
                         <button
-                            onClick={handleSave}
+                            onClick={handleSaveClick}
                             disabled={saving}
                             className="bg-primary hover:bg-primary/90 text-black font-bold px-6 py-3 rounded-xl flex items-center transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
@@ -203,6 +225,13 @@ export default function ManageStandings() {
                         </button>
                     </div>
                 </div>
+
+                <PasswordModal
+                    isOpen={isPasswordModalOpen}
+                    onClose={() => setIsPasswordModalOpen(false)}
+                    onConfirm={(password) => confirmCallback ? confirmCallback(password) : Promise.resolve(false)}
+                    onExceededAttempts={handleLogout}
+                />
 
                 {/* Event Selection - Two Step */}
                 <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">

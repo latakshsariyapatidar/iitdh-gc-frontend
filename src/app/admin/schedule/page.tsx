@@ -5,6 +5,7 @@ import Navbar from '@/components/layout/Navbar';
 import Loader from '@/components/ui/Loader';
 import CustomSelect from '@/components/ui/CustomSelect';
 import { Save, Plus, Trash, Calendar, Clock, MapPin } from 'lucide-react';
+import PasswordModal from '@/components/ui/PasswordModal';
 import { useRouter } from 'next/navigation';
 
 const SPORTS = [
@@ -47,7 +48,14 @@ export default function ManageSchedule() {
     const [saving, setSaving] = useState(false);
     const [selectedMatchId, setSelectedMatchId] = useState<string>("");
     const [filterSport, setFilterSport] = useState<string>("All");
+    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+    const [confirmCallback, setConfirmCallback] = useState<((password: string) => Promise<boolean>) | null>(null);
     const router = useRouter();
+
+    const handleLogout = () => {
+        localStorage.removeItem('adminToken');
+        router.push('/admin/login');
+    };
 
     useEffect(() => {
         const token = localStorage.getItem('adminToken');
@@ -87,7 +95,7 @@ export default function ManageSchedule() {
         fetchData();
     }, [router]);
 
-    const handleSave = async () => {
+    const handleSaveClick = () => {
         for (const match of schedule) {
             if (!match.teamA || !match.teamB) {
                 alert(`Match between ${match.teamA || 'Unknown'} and ${match.teamB || 'Unknown'} must have both teams selected.`);
@@ -102,18 +110,32 @@ export default function ManageSchedule() {
                 return;
             }
         }
+        setConfirmCallback(() => handleConfirmSave);
+        setIsPasswordModalOpen(true);
+    };
 
+    const handleConfirmSave = async (password: string): Promise<boolean> => {
         setSaving(true);
         try {
-            await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/schedule`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/schedule`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-admin-password': password
+                },
                 body: JSON.stringify(schedule),
             });
-            alert('Schedule saved successfully!');
+
+            if (res.ok) {
+                alert('Schedule saved successfully!');
+                return true;
+            } else {
+                return false;
+            }
         } catch (error) {
             console.error('Error saving schedule:', error);
             alert('Failed to save schedule.');
+            return false;
         } finally {
             setSaving(false);
         }
@@ -144,33 +166,54 @@ export default function ManageSchedule() {
         });
     };
 
-    const removeMatch = (index: number) => {
+    const removeMatchClick = (index: number) => {
         if (index === -1) return;
         if (confirm('Are you sure you want to delete this match?')) {
-            const newSchedule = [...schedule];
-            newSchedule.splice(index, 1);
-            setSchedule(newSchedule);
+            setConfirmCallback(() => (password: string) => handleConfirmRemoveMatch(index, password));
+            setIsPasswordModalOpen(true);
+        }
+    };
 
-            // Determine next selection
-            // Try to select the item at the same index (which is the next item)
-            // If that doesn't exist (we deleted the last one), select the previous one
-            let nextMatch = newSchedule[index];
-            if (!nextMatch) {
-                nextMatch = newSchedule[index - 1];
-            }
+    const handleConfirmRemoveMatch = async (index: number, password: string) => {
+        setIsPasswordModalOpen(false);
+        const newSchedule = [...schedule];
+        newSchedule.splice(index, 1);
+        setSchedule(newSchedule);
 
-            if (nextMatch) {
-                // If filter is active, ensure the selected match is visible
-                if (filterSport === "All" || nextMatch.sport === filterSport) {
-                    setSelectedMatchId(nextMatch.id);
-                } else {
-                    // If next match is not visible, fallback to first visible match
-                    const visibleMatches = newSchedule.filter(m => m.sport === filterSport);
-                    setSelectedMatchId(visibleMatches.length > 0 ? visibleMatches[0].id : "");
-                }
+        // Determine next selection
+        let nextMatch = newSchedule[index];
+        if (!nextMatch) {
+            nextMatch = newSchedule[index - 1];
+        }
+
+        if (nextMatch) {
+            if (filterSport === "All" || nextMatch.sport === filterSport) {
+                setSelectedMatchId(nextMatch.id);
             } else {
-                setSelectedMatchId("");
+                const visibleMatches = newSchedule.filter(m => m.sport === filterSport);
+                setSelectedMatchId(visibleMatches.length > 0 ? visibleMatches[0].id : "");
             }
+        } else {
+            setSelectedMatchId("");
+        }
+
+        // Save changes
+        setSaving(true);
+        try {
+            await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/schedule`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-admin-password': password
+                },
+                body: JSON.stringify(newSchedule),
+            });
+            alert('Match deleted successfully!');
+        } catch (error) {
+            console.error('Error deleting match:', error);
+            alert('Failed to delete match.');
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -196,7 +239,7 @@ export default function ManageSchedule() {
                             <Plus className="h-5 w-5 mr-2" /> Add Match
                         </button>
                         <button
-                            onClick={handleSave}
+                            onClick={handleSaveClick}
                             disabled={saving}
                             className="bg-primary hover:bg-primary/90 text-black font-bold px-6 py-3 rounded-xl flex items-center transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
@@ -212,6 +255,13 @@ export default function ManageSchedule() {
                         </button>
                     </div>
                 </div>
+
+                <PasswordModal
+                    isOpen={isPasswordModalOpen}
+                    onClose={() => setIsPasswordModalOpen(false)}
+                    onConfirm={(password) => confirmCallback ? confirmCallback(password) : Promise.resolve(false)}
+                    onExceededAttempts={handleLogout}
+                />
 
                 {/* Match Selection - Two Step */}
                 <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -268,7 +318,7 @@ export default function ManageSchedule() {
                                     </div>
                                 </div>
                                 <button
-                                    onClick={() => removeMatch(selectedMatchIndex)}
+                                    onClick={() => removeMatchClick(selectedMatchIndex)}
                                     className="text-red-500 hover:text-red-400 p-2 rounded-lg hover:bg-red-500/10 transition-colors flex items-center gap-2"
                                     title="Delete Match"
                                 >

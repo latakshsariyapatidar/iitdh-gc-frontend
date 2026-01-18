@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Navbar from '@/components/layout/Navbar';
 import Loader from '@/components/ui/Loader';
 import { Save, Plus, Trash, Upload, Link as LinkIcon, Loader2 } from 'lucide-react';
+import PasswordModal from '@/components/ui/PasswordModal';
 import { useRouter } from 'next/navigation';
 
 interface Coordinator {
@@ -30,7 +31,15 @@ export default function ManageContact() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [uploading, setUploading] = useState<{ [key: string]: boolean }>({});
+    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+    const [confirmCallback, setConfirmCallback] = useState<((password: string) => Promise<boolean>) | null>(null);
+    const [pendingUpload, setPendingUpload] = useState<{ index: number, file: File } | null>(null);
     const router = useRouter();
+
+    const handleLogout = () => {
+        localStorage.removeItem('adminToken');
+        router.push('/admin/login');
+    };
 
     useEffect(() => {
         const token = localStorage.getItem('adminToken');
@@ -53,7 +62,7 @@ export default function ManageContact() {
             });
     }, [router]);
 
-    const handleSave = async () => {
+    const handleSaveClick = () => {
         if (!contact) return;
         if (!contact.email || !contact.phone) {
             alert("Email and Phone are required.");
@@ -66,18 +75,32 @@ export default function ManageContact() {
                 return;
             }
         }
+        setConfirmCallback(() => handleConfirmSave);
+        setIsPasswordModalOpen(true);
+    };
 
+    const handleConfirmSave = async (password: string): Promise<boolean> => {
         setSaving(true);
         try {
-            await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/contact`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/contact`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-admin-password': password
+                },
                 body: JSON.stringify(contact),
             });
-            alert('Contact info saved successfully!');
+
+            if (res.ok) {
+                alert('Contact info saved successfully!');
+                return true;
+            } else {
+                return false;
+            }
         } catch (error) {
             console.error('Error saving contact info:', error);
             alert('Failed to save contact info.');
+            return false;
         } finally {
             setSaving(false);
         }
@@ -127,8 +150,17 @@ export default function ManageContact() {
         setContact({ ...contact, coordinators: newCoordinators });
     };
 
-    const handleFileUpload = async (index: number, file: File) => {
+    const handleFileUploadClick = (index: number, file: File) => {
         if (!file) return;
+        setPendingUpload({ index, file });
+        setConfirmCallback(() => handleConfirmUpload);
+        setIsPasswordModalOpen(true);
+    };
+
+    const handleConfirmUpload = async (password: string): Promise<boolean> => {
+        if (!pendingUpload) return false;
+        const { index, file } = pendingUpload;
+        // Do not close modal here, let component handle it on success
 
         setUploading(prev => ({ ...prev, [index]: true }));
         const formData = new FormData();
@@ -137,19 +169,28 @@ export default function ManageContact() {
         try {
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/upload`, {
                 method: 'POST',
+                headers: { 'x-admin-password': password },
                 body: formData,
             });
             const data = await res.json();
-            if (data.success) {
+
+            if (res.ok && data.success) {
                 updateCoordinator(index, 'image', data.url);
+                return true;
             } else {
-                alert('Upload failed');
+                // Only alert if it's NOT a password error (401/403)
+                if (res.status !== 401 && res.status !== 403) {
+                    alert('Upload failed: ' + (data.message || 'Unknown error'));
+                }
+                return false;
             }
         } catch (error) {
             console.error('Error uploading file:', error);
             alert('Error uploading file');
+            return false;
         } finally {
             setUploading(prev => ({ ...prev, [index]: false }));
+            setPendingUpload(null);
         }
     };
 
@@ -167,7 +208,7 @@ export default function ManageContact() {
                         <p className="text-slate-400">Update contact details and coordinators</p>
                     </div>
                     <button
-                        onClick={handleSave}
+                        onClick={handleSaveClick}
                         disabled={saving}
                         className="bg-primary hover:bg-primary/90 text-black px-6 py-3 rounded-full font-bold flex items-center gap-2 transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -301,7 +342,7 @@ export default function ManageContact() {
                                                         <input
                                                             type="file"
                                                             accept="image/*"
-                                                            onChange={(e) => e.target.files && handleFileUpload(index, e.target.files[0])}
+                                                            onChange={(e) => e.target.files && handleFileUploadClick(index, e.target.files[0])}
                                                             className="w-full bg-black/20 border border-white/10 rounded-lg p-2 text-white text-xs file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[10px] file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer"
                                                             disabled={uploading[index]}
                                                         />
@@ -355,6 +396,12 @@ export default function ManageContact() {
                         </div>
                     </div>
                 </div>
+                <PasswordModal
+                    isOpen={isPasswordModalOpen}
+                    onClose={() => setIsPasswordModalOpen(false)}
+                    onConfirm={(password) => confirmCallback ? confirmCallback(password) : Promise.resolve(false)}
+                    onExceededAttempts={handleLogout}
+                />
             </main>
         </div>
     );

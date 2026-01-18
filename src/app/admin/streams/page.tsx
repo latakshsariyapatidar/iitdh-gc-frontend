@@ -5,6 +5,7 @@ import Navbar from '@/components/layout/Navbar';
 import Loader from '@/components/ui/Loader';
 import { Save, Play, Link as LinkIcon, AlertCircle, CheckCircle } from 'lucide-react';
 import CustomSelect from '@/components/ui/CustomSelect';
+import PasswordModal from '@/components/ui/PasswordModal';
 import { useRouter } from 'next/navigation';
 
 // URL validation helper
@@ -38,7 +39,14 @@ export default function ManageStreams() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [selectedSport, setSelectedSport] = useState(SPORTS[0]);
+    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+    const [confirmCallback, setConfirmCallback] = useState<((password: string) => Promise<boolean>) | null>(null);
     const router = useRouter();
+
+    const handleLogout = () => {
+        localStorage.removeItem('adminToken');
+        router.push('/admin/login');
+    };
 
     useEffect(() => {
         const token = localStorage.getItem('adminToken');
@@ -82,28 +90,52 @@ export default function ManageStreams() {
         fetchData();
     }, [router]);
 
-    const handleSave = async () => {
+    const handleSaveClick = () => {
+        setConfirmCallback(() => handleConfirmSave);
+        setIsPasswordModalOpen(true);
+    };
+
+    const handleConfirmSave = async (password: string): Promise<boolean> => {
         setSaving(true);
         try {
             const scheduleUpdates = results.filter(r => r.source === 'schedule');
             const resultUpdates = results.filter(r => r.source === 'result');
 
-            await Promise.all([
+            const responses = await Promise.all([
                 fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/schedule`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-admin-password': password
+                    },
                     body: JSON.stringify(scheduleUpdates),
                 }),
                 fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/results`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-admin-password': password
+                    },
                     body: JSON.stringify(resultUpdates),
                 })
             ]);
-            alert('Streams saved successfully!');
+
+            const allOk = responses.every(res => res.ok);
+            const isUnauthorized = responses.some(res => res.status === 401 || res.status === 403);
+
+            if (allOk) {
+                alert('Streams saved successfully!');
+                return true;
+            } else {
+                if (!isUnauthorized) {
+                    alert('Failed to save streams. Please try again.');
+                }
+                return false;
+            }
         } catch (error) {
             console.error('Error saving streams:', error);
             alert('Failed to save streams.');
+            return false;
         } finally {
             setSaving(false);
         }
@@ -133,7 +165,7 @@ export default function ManageStreams() {
                         <p className="text-muted-foreground">Add or update live stream links for matches</p>
                     </div>
                     <button
-                        onClick={handleSave}
+                        onClick={handleSaveClick}
                         disabled={saving}
                         className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-6 py-3 rounded-xl flex items-center transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -150,6 +182,13 @@ export default function ManageStreams() {
                         )}
                     </button>
                 </div>
+
+                <PasswordModal
+                    isOpen={isPasswordModalOpen}
+                    onClose={() => setIsPasswordModalOpen(false)}
+                    onConfirm={(password) => confirmCallback ? confirmCallback(password) : Promise.resolve(false)}
+                    onExceededAttempts={handleLogout}
+                />
 
                 {/* Sport Selection Dropdown */}
                 <div className="mb-8">

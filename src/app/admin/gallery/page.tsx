@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Navbar from '@/components/layout/Navbar';
 import Loader from '@/components/ui/Loader';
 import { Save, Plus, Trash, Upload, Link as LinkIcon, Loader2 } from 'lucide-react';
+import PasswordModal from '@/components/ui/PasswordModal';
 import { useRouter } from 'next/navigation';
 
 interface GalleryItem {
@@ -18,6 +19,9 @@ export default function ManageGallery() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [uploading, setUploading] = useState<{ [key: string]: boolean }>({});
+    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+    const [confirmCallback, setConfirmCallback] = useState<((password: string) => Promise<boolean>) | null>(null);
+    const [pendingUpload, setPendingUpload] = useState<{ index: number, file: File } | null>(null);
     const router = useRouter();
 
     useEffect(() => {
@@ -32,7 +36,12 @@ export default function ManageGallery() {
             });
     }, [router]);
 
-    const handleSave = async () => {
+    const handleLogout = () => {
+        localStorage.removeItem('adminToken');
+        router.push('/admin/login');
+    };
+
+    const handleSaveClick = () => {
         const validGallery = gallery.filter(item => item.title && item.url);
 
         if (validGallery.length < gallery.length) {
@@ -41,18 +50,34 @@ export default function ManageGallery() {
             }
             setGallery(validGallery);
         }
+        setConfirmCallback(() => handleConfirmSave);
+        setIsPasswordModalOpen(true);
+    };
+
+    const handleConfirmSave = async (password: string): Promise<boolean> => {
+        const validGallery = gallery.filter(item => item.title && item.url);
 
         setSaving(true);
         try {
-            await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/gallery`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/gallery`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-admin-password': password
+                },
                 body: JSON.stringify(validGallery),
             });
-            alert('Gallery saved successfully!');
+
+            if (res.ok) {
+                alert('Gallery saved successfully!');
+                return true;
+            } else {
+                return false;
+            }
         } catch (error) {
             console.error('Error saving gallery:', error);
             alert('Failed to save gallery.');
+            return false;
         } finally {
             setSaving(false);
         }
@@ -81,8 +106,17 @@ export default function ManageGallery() {
         });
     };
 
-    const handleFileUpload = async (index: number, file: File) => {
+    const handleFileUploadClick = (index: number, file: File) => {
         if (!file) return;
+        setPendingUpload({ index, file });
+        setConfirmCallback(() => handleConfirmUpload);
+        setIsPasswordModalOpen(true);
+    };
+
+    const handleConfirmUpload = async (password: string): Promise<boolean> => {
+        if (!pendingUpload) return false;
+        const { index, file } = pendingUpload;
+        // Do not close modal here, let component handle it on success
 
         setUploading(prev => ({ ...prev, [index]: true }));
         const formData = new FormData();
@@ -91,19 +125,28 @@ export default function ManageGallery() {
         try {
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/upload`, {
                 method: 'POST',
+                headers: { 'x-admin-password': password },
                 body: formData,
             });
             const data = await res.json();
-            if (data.success) {
+
+            if (res.ok && data.success) {
                 updateImage(index, 'url', data.url);
+                return true;
             } else {
-                alert('Upload failed');
+                // Only alert if it's NOT a password error (401/403)
+                if (res.status !== 401 && res.status !== 403) {
+                    alert('Upload failed: ' + (data.message || 'Unknown error'));
+                }
+                return false;
             }
         } catch (error) {
             console.error('Error uploading file:', error);
             alert('Error uploading file');
+            return false;
         } finally {
             setUploading(prev => ({ ...prev, [index]: false }));
+            setPendingUpload(null);
         }
     };
 
@@ -126,7 +169,7 @@ export default function ManageGallery() {
                             <Plus className="h-5 w-5 mr-2" /> Add Image
                         </button>
                         <button
-                            onClick={handleSave}
+                            onClick={handleSaveClick}
                             disabled={saving}
                             className="bg-primary hover:bg-primary/90 text-black font-bold px-6 py-3 rounded-xl flex items-center transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
@@ -143,6 +186,13 @@ export default function ManageGallery() {
                         </button>
                     </div>
                 </div>
+
+                <PasswordModal
+                    isOpen={isPasswordModalOpen}
+                    onClose={() => setIsPasswordModalOpen(false)}
+                    onConfirm={(password) => confirmCallback ? confirmCallback(password) : Promise.resolve(false)}
+                    onExceededAttempts={handleLogout}
+                />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {gallery.length === 0 && (
@@ -196,7 +246,7 @@ export default function ManageGallery() {
                                             <input
                                                 type="file"
                                                 accept="image/*"
-                                                onChange={(e) => e.target.files && handleFileUpload(index, e.target.files[0])}
+                                                onChange={(e) => e.target.files && handleFileUploadClick(index, e.target.files[0])}
                                                 className="w-full bg-black/20 border border-white/10 rounded-lg p-2 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer"
                                                 disabled={uploading[index]}
                                             />

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Navbar from '@/components/layout/Navbar';
 import Loader from '@/components/ui/Loader';
 import CustomSelect from '@/components/ui/CustomSelect';
+import PasswordModal from '@/components/ui/PasswordModal';
 import { Save, Plus, Trash, FileText, Link as LinkIcon, Upload, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -64,7 +65,14 @@ export default function ManageResults() {
     const [selectedResultId, setSelectedResultId] = useState<string>("");
     const [filterSport, setFilterSport] = useState<string>("All");
     const [uploading, setUploading] = useState(false);
+    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+    const [confirmCallback, setConfirmCallback] = useState<((password: string) => Promise<boolean>) | null>(null);
     const router = useRouter();
+
+    const handleLogout = () => {
+        localStorage.removeItem('adminToken');
+        router.push('/admin/login');
+    };
 
     useEffect(() => {
         const token = localStorage.getItem('adminToken');
@@ -111,7 +119,7 @@ export default function ManageResults() {
         fetchData();
     }, [router]);
 
-    const handleSave = async () => {
+    const handleSaveClick = () => {
         for (const result of results) {
             if (!result.teamA || !result.teamB) {
                 alert(`Match between ${result.teamA || 'Unknown'} and ${result.teamB || 'Unknown'} must have both teams selected.`);
@@ -130,22 +138,41 @@ export default function ManageResults() {
                 return;
             }
         }
+        setConfirmCallback(() => handleConfirmSave);
+        setIsPasswordModalOpen(true);
+    };
 
+    const handleConfirmSave = async (password: string): Promise<boolean> => {
+        setIsPasswordModalOpen(false);
         setSaving(true);
         try {
-            await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/results`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/results`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-admin-password': password
+                },
                 body: JSON.stringify(results),
             });
-            alert('Results published successfully!');
+
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                alert('Results published successfully!');
+                return true;
+            } else {
+                alert(data.message || 'Failed to save results.');
+                return false;
+            }
         } catch (error) {
             console.error('Error saving results:', error);
             alert('Failed to save results.');
+            return false;
         } finally {
             setSaving(false);
         }
     };
+
 
     const addResult = () => {
         const newId = Date.now().toString();
@@ -204,8 +231,20 @@ export default function ManageResults() {
         }
     };
 
-    const handleScoreSheetUpload = async (index: number, file: File) => {
+    const [pendingUpload, setPendingUpload] = useState<{ index: number, file: File } | null>(null);
+
+    const handleScoreSheetUploadClick = (index: number, file: File) => {
         if (!file) return;
+        setPendingUpload({ index, file });
+        setConfirmCallback(() => handleConfirmUpload);
+        setIsPasswordModalOpen(true);
+    };
+
+    const handleConfirmUpload = async (password: string): Promise<boolean> => {
+        if (!pendingUpload) return false;
+        const { index, file } = pendingUpload;
+        // Do not close modal here, let component handle it on success
+
         setUploading(true);
         const formData = new FormData();
         formData.append('image', file);
@@ -213,19 +252,28 @@ export default function ManageResults() {
         try {
             const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/upload`, {
                 method: 'POST',
+                headers: { 'x-admin-password': password },
                 body: formData,
             });
             const data = await res.json();
-            if (data.success) {
+
+            if (res.ok && data.success) {
                 updateResult(index, 'scoreSheetLink', data.url);
+                return true;
             } else {
-                alert('Upload failed');
+                // Only alert if it's NOT a password error (401/403)
+                if (res.status !== 401 && res.status !== 403) {
+                    alert('Upload failed: ' + (data.message || 'Unknown error'));
+                }
+                return false;
             }
         } catch (error) {
             console.error('Error uploading file:', error);
             alert('Error uploading file');
+            return false;
         } finally {
             setUploading(false);
+            setPendingUpload(null);
         }
     };
 
@@ -251,7 +299,7 @@ export default function ManageResults() {
                             <Plus className="h-5 w-5 mr-2" /> Add Result
                         </button>
                         <button
-                            onClick={handleSave}
+                            onClick={handleSaveClick}
                             disabled={saving}
                             className="bg-primary hover:bg-primary/90 text-black font-bold px-6 py-3 rounded-xl flex items-center transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
@@ -267,6 +315,13 @@ export default function ManageResults() {
                         </button>
                     </div>
                 </div>
+
+                <PasswordModal
+                    isOpen={isPasswordModalOpen}
+                    onClose={() => setIsPasswordModalOpen(false)}
+                    onConfirm={(password) => confirmCallback ? confirmCallback(password) : Promise.resolve(false)}
+                    onExceededAttempts={handleLogout}
+                />
 
                 {/* Result Selection - Two Step */}
                 <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -384,7 +439,7 @@ export default function ManageResults() {
                                     <input
                                         type="file"
                                         accept=".pdf,.doc,.docx,.xls,.xlsx,image/*"
-                                        onChange={(e) => e.target.files && handleScoreSheetUpload(selectedResultIndex, e.target.files[0])}
+                                        onChange={(e) => e.target.files && handleScoreSheetUploadClick(selectedResultIndex, e.target.files[0])}
                                         className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white text-sm file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer"
                                         disabled={uploading}
                                     />
